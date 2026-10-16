@@ -53,8 +53,7 @@ class NotFoundError(SentinelError):
     code = "not_found"
 
 
-# Use modern HTTP_422_UNPROCESSABLE_CONTENT if present, fallback to HTTP_422_UNPROCESSABLE_ENTITY
-HTTP_422 = getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", status.HTTP_422_UNPROCESSABLE_ENTITY)
+HTTP_422 = getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", 422)
 
 
 class ValidationError(SentinelError):

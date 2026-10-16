@@ -100,7 +100,7 @@ class NebiusTokenFactoryProvider:
         @retry(
             retry=retry_if_exception_type((ProviderError,)),
             stop=stop_after_attempt(self._max_retries + 1),
-            wait=wait_exponential_jitter(initial=2, max=30),
+            wait=wait_exponential_jitter(multiplier=2, max=30),
             reraise=True,
         )
         async def _call() -> Any:

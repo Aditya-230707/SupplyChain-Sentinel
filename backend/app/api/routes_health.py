@@ -8,7 +8,7 @@ POST /api/v1/health/providers/smoke-test — live provider call (requires ALLOW_
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 from fastapi import APIRouter, Depends
@@ -70,7 +70,7 @@ async def health(settings: Settings = Depends(get_settings)) -> AppHealth:
         status=overall,
         version="0.1.0",
         environment=settings.app_env,
-        timestamp=datetime.utcnow().isoformat() + "Z",
+        timestamp=datetime.now(UTC).isoformat(),
         database=DBStatus(ok=db_ok, error=db_error),
     )
 

@@ -78,7 +78,7 @@ class OllamaProvider:
         @retry(
             retry=retry_if_exception_type((ProviderError,)),
             stop=stop_after_attempt(self._max_retries + 1),
-            wait=wait_exponential_jitter(initial=1, max=10),
+            wait=wait_exponential_jitter(multiplier=1, max=10),
             reraise=True,
         )
         async def _call() -> Any:

@@ -349,10 +349,10 @@ class IncidentCandidate(Base):
         "InvestigationRun", back_populates="incidents"
     )
     exposure: Mapped[ExposureAssessment | None] = relationship(
-        "ExposureAssessment", back_populates="incident", uselist=False
+        "ExposureAssessment", back_populates="incident", uselist=False, lazy="selectin"
     )
     policy_decision: Mapped[PolicyDecision | None] = relationship(
-        "PolicyDecision", back_populates="incident", uselist=False
+        "PolicyDecision", back_populates="incident", uselist=False, lazy="selectin"
     )
 
 
