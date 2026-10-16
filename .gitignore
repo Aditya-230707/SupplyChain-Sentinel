@@ -1,0 +1,93 @@
+# ============================================================
+# SupplyChain Sentinel — .gitignore
+# ============================================================
+
+# ---- Secrets (never commit) --------------------------------
+.env
+.env.local
+.env.*.local
+*.secret
+secrets/
+
+# ---- Python ------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+ENV/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.installed.cfg
+lib/
+lib64/
+
+# ---- pytest / coverage ------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+.tox/
+nosetests.xml
+test-results/
+
+# ---- Ruff / mypy ------------------------------------------
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ---- SQLite DB files (local dev) ---------------------------
+*.db
+*.sqlite
+*.sqlite3
+
+# ---- Alembic generated migration env ----------------------
+# Keep migrations/ but not auto-generated envs
+backend/alembic.ini   # not gitignored — track it
+
+# ---- Node / Frontend ---------------------------------------
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+*.tsbuildinfo
+.parcel-cache/
+.next/
+.nuxt/
+.output/
+
+# ---- OS / IDE ----------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+*~
+.history/
+
+# ---- Logs --------------------------------------------------
+*.log
+logs/
+
+# ---- Evaluation outputs ------------------------------------
+backend/app/evaluation/runs/
+backend/app/evaluation/results/
+
+# ---- Misc --------------------------------------------------
+*.bak
+*.tmp
+.cache/
