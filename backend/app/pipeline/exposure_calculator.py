@@ -122,7 +122,9 @@ def calculate_operational_exposure(
         )
 
     # EX-003: Formula gap = max(0, duration - coverage)
-    gap = max(Decimal("0"), duration - part.inventory_coverage_days)
+    dur_dec = Decimal(str(duration))
+    cov_dec = Decimal(str(part.inventory_coverage_days))
+    gap = max(Decimal("0"), dur_dec - cov_dec)
 
     if duration_provenance == "scenario_assumption":
         assumptions.append(f"Disruption duration ({duration} days) is a scenario assumption.")

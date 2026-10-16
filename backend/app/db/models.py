@@ -445,6 +445,10 @@ class HumanReview(Base):
     # approve_recommendation | reject_recommendation |
     # request_more_information | mark_monitor_only
     action: Mapped[str] = mapped_column(String(50), nullable=False)
+    override_recommendation: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    reviewer_name: Mapped[str | None] = mapped_column(
+        String(100), default="Procurement Reviewer", nullable=True
+    )
     reviewer_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     reviewed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), default=_now, nullable=False

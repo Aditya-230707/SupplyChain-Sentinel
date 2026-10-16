@@ -48,7 +48,15 @@ class HumanReviewCreate(BaseModel):
     reviewer_note: str | None = Field(
         default=None,
         max_length=5000,
-        description="Optional rationale or correction note from the reviewer",
+        description="Required rationale when rejecting or overriding a recommendation",
+    )
+    override_recommendation: PolicyRecommendation | None = Field(
+        default=None,
+        description="Optional explicitly selected recommendation when overriding",
+    )
+    reviewer_name: str | None = Field(
+        default="Procurement Reviewer",
+        description="Name or ID of reviewer recording the decision",
     )
 
 
@@ -58,6 +66,8 @@ class HumanReviewRead(BaseModel):
     id: str
     policy_decision_id: str
     action: HumanReviewAction
+    override_recommendation: str | None = None
+    reviewer_name: str | None = None
     reviewer_note: str | None = None
     reviewed_at: datetime
     prior_recommendation: str | None = None

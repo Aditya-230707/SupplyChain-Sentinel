@@ -13,6 +13,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.decision import PolicyDecisionRead
+
 
 class ExposureInputValue(BaseModel):
     """One input to the exposure calculation with provenance."""
@@ -69,5 +71,6 @@ class IncidentCandidateRead(BaseModel):
     contradiction_summary: str | None = None
     review_required: bool
     exposure: ExposureAssessmentRead | None = None
+    policy_decision: PolicyDecisionRead | None = None
     created_at: datetime
     updated_at: datetime

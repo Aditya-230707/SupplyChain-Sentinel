@@ -42,6 +42,10 @@ class InvestigationCreate(BaseModel):
         description="ISO date string — search results before this date are deprioritized",
     )
     date_range_end: str | None = None
+    search_mode: Literal["fixture", "live"] = Field(
+        default="fixture",
+        description="Search mode: 'fixture' for demo, 'live' for Tavily",
+    )
 
     @classmethod
     def validate_categories(cls, v: list[str]) -> list[str]:
