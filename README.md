@@ -8,6 +8,7 @@
 [![React: 18](https://img.shields.io/badge/React-18-cyan.svg)](https://react.dev/)
 [![Evaluation: 100% Quote Validity](https://img.shields.io/badge/Quote_Validity-100%25-brightgreen.svg)](evaluation/evaluation_results.json)
 [![Evaluation: 0% False Escalation](https://img.shields.io/badge/False_Escalation-0.0%25-brightgreen.svg)](evaluation/evaluation_results.json)
+[![Evaluation: 100% VOI Efficiency](https://img.shields.io/badge/VOI_Efficiency-100%25-brightgreen.svg)](evaluation/evaluation_results.json)
 
 ---
 
@@ -15,59 +16,75 @@
 
 Enterprise supply chain teams are bombarded by breaking news, wire alerts, and social media rumors regarding factory fires, port strikes, and cyberattacks. Generative AI alone frequently hallucinates quotes, conflates same-name companies, treats duplicate syndicated wire releases as independent corroboration, and recommends premature order freezes.
 
-**SupplyChain Sentinel** solves this with an **evidence-first, deterministic verification pipeline**:
-1. **Never trusts raw LLM output:** Model extraction is strictly parsed via Pydantic schemas.
-2. **Deterministic quote validation:** Every supporting quote extracted by an LLM is mathematically verified as an exact substring against the immutable retrieved source text.
-3. **Syndicated wire lineage clustering:** Automatically groups syndicated press releases and wire copies (via URL canonicalization and SHA-256 fingerprinting) so duplicate reporting does not falsely inflate corroboration confidence.
-4. **Multi-signal corporate entity resolution:** Resolves legal entity names, stock tickers, corporate domains, and locations to prevent confusing a distinct company with the buyer's supplier.
-5. **Deterministic operational exposure calculation:** Inventory coverage, recovery duration, and supplier-part criticality are calculated using explicit numerical formulas. Missing values remain explicitly `None` (unknown) rather than defaulting to zero.
-6. **Explicit policy rulebook (P-001 to P-010):** Recommendations (`urgent_human_review`, `review_contingency_plan`, `request_supplier_confirmation`, `monitor`, `insufficient_evidence`) are produced exclusively by deterministic Python code, never by free-form LLM generation.
-7. **Human-in-the-loop decision gate:** The system never autonomously halts orders or cancels contracts. Procurement managers inspect evidence, audit source lineage, and record decisions with full historical audit trails.
+**SupplyChain Sentinel** is a deterministic, evidence-grounded decision intelligence platform:
+1. **Never trusts raw LLM output:** Model extraction is strictly parsed via typed Pydantic schemas.
+2. **Deterministic quote validation (Rule E-005):** Every supporting quote extracted by an LLM is mathematically verified as an exact substring against the immutable retrieved source text.
+3. **Syndicated wire lineage clustering (Rules E-001 to E-003):** Automatically groups syndicated press releases and wire copies (via URL canonicalization and SHA-256 fingerprinting) so duplicate reporting does not falsely inflate corroboration confidence.
+4. **Multi-signal corporate & facility entity resolution (ID-001 to ID-005, FAC-001):** Resolves legal entity names, stock tickers, corporate domains, and specific manufacturing facilities against buyer contracts to prevent false alerts.
+5. **Evidence graph provenance DAG:** Connects all sources, claims, facilities, parts, exposure calculations, and policy decisions into an inspectable bipartite Directed Acyclic Graph with explicit semantic relations (`CORROBORATES`, `CONTRADICTS`, `ECHOES`).
+6. **Mathematical exposure & decision loss engine (EX-001 to EX-009):** Propagates duration ranges $[D_{\min}, D_{\max}] \to [\text{gap}_{\min}, \text{gap}_{\max}]$ with strict null safety, models deterministic scenarios (Short, Baseline, Extended), and calculates expected decision loss $\mathbb{E}[L(a)]$.
+7. **Bounded Next-Best-Investigation loop (VOI-001 to VOI-004):** Automatically identifies unresolved evidentiary gaps, ranks targeted research queries using a transparent Value of Information (VOI) heuristic, executes bounded follow-ups, and records full decision traces.
+8. **Explicit policy rulebook (P-001 to P-010):** Action recommendations (`urgent_human_review`, `review_contingency_plan`, `request_supplier_confirmation`, `monitor`, `insufficient_evidence`) are produced exclusively by deterministic Python code, never by free-form LLM generation.
+9. **Human-in-the-loop decision gate:** The system never autonomously halts orders or cancels contracts. Procurement managers inspect evidence, audit source lineage, and record decisions with full historical audit trails.
 
 ---
 
-## 2. Architecture & Core Pipeline
+## 2. Architecture & Pipeline
 
-```
-[Public Reports / News] ───► [Search Provider (DuckDuckGo / Tavily / Fixture)]
-                                        │
-                                        ▼
-                             [Source Normalizer]
-                          (Canonical URL + SHA-256 Hash)
-                                        │
-                                        ▼
-                            [Source Lineage Analyzer]
-                         (Syndicated Wire Clustering)
-                                        │
-                                        ▼
-                            [LLM Claim Extraction]
-                   (Nebius Token Factory / NVIDIA Nemotron / Ollama)
-                                        │
-                                        ▼
-                       [Deterministic Claim Validator]
-                      (Substring Quote Verification)
-                                        │
-                                        ▼
-                       [Multi-Signal Entity Resolver]
-                  (Domain, Registry, Country, Legal Name)
-                                        │
-                                        ▼
-                     [Deterministic Exposure Calculator]
-                       (Lead Time vs Inventory Gap)
-                                        │
-                                        ▼
-                      [Deterministic Policy Rulebook]
-                         (Rules P-001 through P-010)
-                                        │
-                                        ▼
-                     [Human Reviewer Decision Gate & Audit]
+```text
+[Public News / Reports] ───► [Search Provider (DuckDuckGo / Tavily / Fixture)]
+                                         │
+                                         ▼
+                              [Source Normalizer]
+                           (Canonical URL + SHA-256 Hash)
+                                         │
+                                         ▼
+                             [Source Lineage Analyzer]
+                           (Syndicated Wire Clustering)
+                                         │
+                                         ▼
+                             [LLM Claim Extraction]
+                    (Nebius Token Factory / NVIDIA Nemotron / Ollama)
+                                         │
+                                         ▼
+                        [Deterministic Claim Validator]
+                       (Substring Quote Verification)
+                                         │
+                                         ▼
+                        [Entity & Facility Resolver]
+                    (Domain, Registry, Country, Cleanroom Plant)
+                                         │
+                                         ▼
+                         [Semantic Claim Relations]
+                   (Contradiction, Corroboration, Wire Echo)
+                                         │
+                                         ▼
+                      [Mathematical Exposure & Loss Engine]
+                  (Range Propagation, Scenarios, Expected Loss)
+                                         │
+                                         ▼
+                       [Deterministic Policy Rulebook]
+                          (Rules P-001 through P-010)
+                                         │
+                                         ▼
+                     [Bounded Next-Best-Investigation (VOI)]
+                   (Gaps Identification ──► VOI Query Execution)
+                                         │
+                                         ▼
+                       [Evidence Graph Provenance DAG]
+                       (Audit Ledger & Bipartite Graph)
+                                         │
+                                         ▼
+                      [Human Reviewer Decision Gate & Audit]
 ```
 
-### Deterministic Rulebook Principles
-- **E-005 (Quote Integrity):** Any claim whose quote is not found verbatim in the source text is rejected as ungrounded.
+### Deterministic Principles
+- **E-005 (Quote Integrity):** Any claim whose quote is not found verbatim in the source text is marked `quote_mismatch` and rejected.
 - **ID-001 to ID-004 (Entity Disambiguation):** Ambiguous corporate names or location contradictions block high-impact escalation and trigger `request_supplier_confirmation`.
-- **EX-001 to EX-006 (Null-Safe Exposure):** If duration or inventory days are unknown, gap is strictly `None`. The system refuses to invent risk numbers.
+- **FAC-001 (Facility Mismatch):** Incidents at facilities not used by the buyer are categorized as non-impacting.
+- **EX-002 & EX-007 (Range & Null Safety):** If duration or inventory days are unknown, gap is strictly `None`. When intervals $[D_{\min}, D_{\max}]$ are cited, range bounds propagate without distortion.
 - **P-001 to P-010 (Policy Gate):** Single uncorroborated reports never trigger emergency order freezes; resolved/drill events trigger `monitor`.
+- **VOI-001 to VOI-004 (Next-Best Investigation):** Resolves missing recovery timelines or unverified single sources via bounded follow-up inquiries.
 
 ---
 
@@ -107,11 +124,11 @@ npm run dev
 ```
 Open your browser at: `http://localhost:5173`
 
-### Step 4: Run a Demo Investigation
-1. In the UI, click on the pre-seeded supplier **Apex Semiconductor Ltd**.
-2. Select **Fixture Mode (Deterministic)**.
+### Step 4: Run an Investigation
+1. In the UI, click on any pre-seeded supplier (e.g. **Silicon Foundry Dresden GmbH** or **Apex Semiconductor Ltd**).
+2. Choose search mode: **DuckDuckGo Live** (real web search, no keys required), **Tavily Live**, or **Fixture (Deterministic Demo)**.
 3. Click **"Run Incident Investigation"**.
-4. Inspect the verified claims, green quote validation badges, wire lineage clustering, and deterministic exposure gap.
+4. Inspect the verified claims, verbatim quote validation, Evidence DAG completeness metrics, and Next-Best-Investigation trace.
 5. In the **Human Review Gate**, select "Accept Recommendation" or "Override", provide rationale, and click **"Record Decision"**.
 6. Check the persistent **Audit Trail** below.
 
@@ -159,59 +176,45 @@ To run entirely locally with open-weights LLMs:
 
 ## 6. Live Web Search: DuckDuckGo & Tavily Integrations
 
-Sentinel supports multiple search providers for discovering and retrieving supplier incidents:
-
 ### A. DuckDuckGo Live Search (Zero API Keys Required)
-By default, Sentinel can query real-time public web news and incident wires via DuckDuckGo without requiring external API keys:
+By default, Sentinel queries real-time public web news and incident wires via DuckDuckGo without requiring external API keys:
 - Extracts live publisher metadata, publication timestamps, and source URLs.
 - Fetches and parses target article HTML with `beautifulsoup4` and `httpx`.
-- In the UI intake form, select **"DuckDuckGo Live Search"** to run live discovery out-of-the-box.
+- Built-in SSRF protection prevents network traversal into private IP ranges.
 
 ### B. Tavily Live Search (API Key Integration)
 For enterprise-grade curated search feeds:
-1. Obtain an API key from [Tavily](https://tavily.com/).
-2. In `.env`, set:
-   ```env
-   TAVILY_API_KEY=tvly-your-actual-api-key
-   ```
-3. In the UI, select **"Tavily Live Search"**.
-4. **Zero Silent Fallbacks:** If a live search fails (e.g. rate limit or network error), Sentinel displays an explicit error alert with a retry option. It **never** silently substitutes simulated fixture data during live investigations.
+1. In `.env`, set `TAVILY_API_KEY=tvly-your-actual-api-key`.
+2. In the UI, select **"Tavily Live Search"**.
+3. **Zero Silent Fallbacks:** If a live search fails, Sentinel displays an explicit error alert with a retry option. It **never** silently substitutes simulated fixture data during live investigations.
 
 ---
 
-## 7. Evaluation Benchmark & Results
+## 7. Evaluation Benchmark: 3-Way Comparative Results
 
-Sentinel includes an automated evaluation benchmark comparing **SupplyChain Sentinel** against a **Baseline LLM Approach** across 8 versioned, realistic edge cases.
-
-### Benchmark Edge Cases (`evaluation/benchmark_dataset_v1.json`)
-- **CASE-01:** Genuine Critical Disruption with Syndicated News Wires (Apex Semiconductor factory fire).
-- **CASE-02:** Irrelevant Incident at Non-Critical Facility (Titan Energy substation blast).
-- **CASE-03:** Entity Disambiguation on Similar-Name Company (Australian packaging firm vs UK fastener supplier).
-- **CASE-04:** Wire Duplication Without Corroboration (3 copies of single port strike report).
-- **CASE-05:** Corrected Drill Report / Exercise (Hydraulic drill false alarm).
-- **CASE-06:** Unverified Social Media Rumor (Uncorroborated forum rumor).
-- **CASE-07:** Missing Inventory and Recovery Data (Null-safety test).
-- **CASE-08:** Irrelevant Technical Whitepaper (Ungrounded industry report).
+Sentinel features a 20-case versioned benchmark dataset ([`evaluation/benchmark_dataset_v1.json`](evaluation/benchmark_dataset_v1.json)) and runner ([`evaluation/runner.py`](evaluation/runner.py)) evaluating 3 distinct paradigms:
+1. **Baseline LLM Summarizer:** Prompted unstructured LLM with naive sentiment/escalation.
+2. **SupplyChain Sentinel (1-Shot Deterministic):** Exact quote validation, lineage clustering, entity/facility resolution, range exposure math, and policy rulebook.
+3. **SupplyChain Sentinel + Bounded Next-Best-Investigation (VOI):** Bounded inquiry loop that closes evidence gaps, quantifies missing durations, and resolves unverified single sources.
 
 ### Benchmark Results (`evaluation/evaluation_results.json`)
 
-| Metric | Mathematical Denominator | SupplyChain Sentinel | Baseline LLM | Description |
-|---|---|:---:|:---:|---|
-| **Supplier Attribution Accuracy** | 9 total benchmark cases | **100.0%** | 88.9% | Correct corporate entity resolution vs naive name matching |
-| **Supporting Quote Validity** | 9 total extracted claims | **100.0%** | 88.9% | Mathematically verified exact substring matches against source |
-| **Duplicate Wire Handling** | 2 syndicated wire cases | **100.0%** | 0.0% | Correct clustering of syndicated news wires preventing false corroboration |
-| **False Escalation Rate** | 8 non-escalatable cases | **0.0%** | 87.5% | Non-critical, irrelevant, or misattributed cases wrongly escalated |
-| **Critical Incident Recall** | 1 genuine critical case | **100.0%** | 100.0% | Recall of genuine critical disruptions requiring procurement intervention |
-| **Uncertainty Handling Precision** | 2 missing/ambiguous data cases | **100.0%** | 0.0% | Correct refusal to invent inventory numbers or hallucinate risk |
-
-> **Hackathon Submission Package:** For the complete 3-minute video demo script, storyboard, and developer feedback on Nebius Token Factory and NVIDIA models, see [`docs/SUBMISSION.md`](docs/SUBMISSION.md).
+| Metric | Denominator | Baseline LLM | Sentinel 1-Shot | Sentinel + VOI Loop | Description |
+|---|---|:---:|:---:|:---:|---|
+| **Supplier Attribution Accuracy** | 20 total benchmark cases | 85.0% | **95.0%** | **95.0%** | Multi-signal entity & facility resolution vs naive keyword matching |
+| **Supporting Quote Validity** | 20 total extracted claims | 90.0% | **100.0%** | **100.0%** | Mathematically verified exact substring matches against source |
+| **Duplicate Wire Handling** | 2 syndicated wire cases | 0.0% | **100.0%** | **100.0%** | Accurate clustering of syndicated news wires preventing inflated confidence |
+| **False Escalation Rate** | 17 non-escalatable cases | 94.1% | **0.0%** | **0.0%** | Non-critical, irrelevant, or misattributed cases wrongly escalated |
+| **Critical Incident Recall** | 3 genuine critical cases | 100.0% | **100.0%** | **100.0%** | Recall of genuine critical disruptions requiring procurement intervention |
+| **Uncertainty Handling Precision** | 2 missing/ambiguous data cases | 0.0% | **100.0%** | **100.0%** | Correct preservation of nulls and refusal to hallucinate risk |
+| **VOI Decision Change Efficiency** | 2 unresolved gap cases | 0.0% | 0.0% | **100.0%** | Directional accuracy and information gain achieved by targeted follow-up inquiries |
 
 ### Reproducing the Benchmark
-Run the standalone runner script:
+Run the standalone 3-way evaluation runner:
 ```powershell
 .\backend\.venv\Scripts\python.exe evaluation\runner.py
 ```
-Or run the automated pytest test:
+Or run the automated unit test:
 ```powershell
 .\backend\.venv\Scripts\pytest backend\tests\unit\test_evaluation_benchmark.py -v
 ```
@@ -223,14 +226,14 @@ Or run the automated pytest test:
 Run all automated quality gates across backend and frontend:
 
 ```powershell
-# 1. Run all backend unit tests (95 passing tests)
-.\backend\.venv\Scripts\pytest -k "not test_live_ollama"
+# 1. Run all backend unit tests (118 passing tests)
+.\backend\.venv\Scripts\pytest -m "not slow"
 
 # 2. Run Ruff lint check
-.\backend\.venv\Scripts\ruff check backend evaluation
+.\backend\.venv\Scripts\python.exe -m ruff check backend evaluation
 
 # 3. Run Ruff formatting check
-.\backend\.venv\Scripts\ruff format --check backend evaluation
+.\backend\.venv\Scripts\python.exe -m ruff format --check backend evaluation
 
 # 4. Run Frontend TypeScript check
 npm --prefix frontend run typecheck
@@ -241,12 +244,9 @@ npm --prefix frontend run build
 
 ---
 
-## 9. Known Limitations & Edge Cases
+## 9. Hackathon Submission Package
 
-1. **Entity Name Disambiguation Heuristics:** The current entity resolution module checks normalized legal names, aliases, corporate domains, and country locations. Complex multinational corporate ownership structures (e.g. holding companies with multi-tier subsidiaries) require enterprise ERP integration.
-2. **Deterministic Search Queries:** Live search queries are structured deterministically (`"{supplier_name} {part_name} disruption fire strike delay"`). Complex multi-hop Boolean searches are outside current scope.
-3. **Database Concurrency:** SQLite with WAL mode is used for simple zero-dependency local demonstration. For production enterprise deployment with dozens of concurrent procurement reviewers, PostgreSQL is recommended.
-4. **Live Cloud API Verification:** While all adapter contracts, auth errors, 429 quota handling, and schema fallback logic are 100% covered by unit tests, live Nebius Token Factory inference requires the operator to provide their own active `NEBIUS_API_KEY`.
+For complete details on the architecture, developer feedback on Nebius Token Factory and NVIDIA models, and video demonstration storyboards, see [`docs/SUBMISSION.md`](docs/SUBMISSION.md).
 
 ---
 
