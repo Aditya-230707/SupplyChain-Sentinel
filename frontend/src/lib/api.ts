@@ -446,3 +446,70 @@ export async function getIncidentReviews(incidentId: string): Promise<HumanRevie
 export async function listAuditEvents(limit: number = 50): Promise<AuditEvent[]> {
   return request<AuditEvent[]>('GET', `/audit-events?limit=${limit}`)
 }
+
+// ---- Evidence DAG & Investigation Trace --------------------
+
+export interface GraphNode {
+  id: string
+  label: string
+  node_type: string
+  properties: Record<string, unknown>
+}
+
+export interface GraphEdge {
+  source_id: string
+  target_id: string
+  relation: string
+  weight?: number
+  metadata?: Record<string, unknown>
+}
+
+export interface InvestigationGraph {
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+  metrics: {
+    quote_integrity_ratio: number
+    source_independence_ratio: number
+    data_completeness_score: number
+    contradiction_count: number
+  }
+}
+
+export async function getInvestigationGraph(runId: string): Promise<InvestigationGraph> {
+  return request<InvestigationGraph>('GET', `/investigations/${encodeURIComponent(runId)}/graph`)
+}
+
+export interface InvestigationTraceStep {
+  step_number: number
+  query: string
+  targeted_gap: string
+  rationale: string
+  heuristic_score: number
+  new_sources_count: number
+  new_claims_count: number
+  prior_recommendation: string
+  new_recommendation: string
+  recommendation_changed: boolean
+  termination_reason?: string | null
+}
+
+export interface EvidenceGapItem {
+  gap_type: string
+  description: string
+  target_entity: string
+  impact_weight: number
+}
+
+export interface InvestigationTrace {
+  enabled: boolean
+  initial_recommendation?: string | null
+  final_recommendation?: string | null
+  recommendation_changed: boolean
+  identified_gaps: EvidenceGapItem[]
+  steps: InvestigationTraceStep[]
+}
+
+export async function getInvestigationTrace(runId: string): Promise<InvestigationTrace> {
+  return request<InvestigationTrace>('GET', `/investigations/${encodeURIComponent(runId)}/trace`)
+}
+

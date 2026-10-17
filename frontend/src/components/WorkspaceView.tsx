@@ -315,6 +315,154 @@ export function WorkspaceView({
       {/* SECONDARY COLUMN (35%): RESOLUTION, POLICY, GATE     */}
       {/* ---------------------------------------------------- */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* Evidence Graph & Provenance Integrity */}
+        {(() => {
+          const provenance = (run?.metrics_json as Record<string, unknown>)?.provenance as
+            | {
+                quote_integrity_ratio?: number
+                source_independence_ratio?: number
+                data_completeness_score?: number
+                contradiction_count?: number
+              }
+            | undefined
+
+          if (!provenance) return null
+
+          return (
+            <div className="card">
+              <div className="card-header">
+                <div>
+                  <span className="card-title">Evidence DAG & Provenance</span>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Graph Integrity Verification</div>
+                </div>
+                <span className="pill pill-success">Bipartite DAG</span>
+              </div>
+              <div className="card-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.82rem' }}>
+                  <div style={{ background: 'var(--surface-elevated)', padding: '0.5rem 0.65rem', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border)' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Completeness</div>
+                    <strong style={{ color: 'var(--accent)', fontSize: '0.95rem' }}>
+                      {Math.round((provenance.data_completeness_score ?? 1) * 100)}%
+                    </strong>
+                  </div>
+                  <div style={{ background: 'var(--surface-elevated)', padding: '0.5rem 0.65rem', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border)' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Quote Integrity</div>
+                    <strong style={{ color: 'var(--success)', fontSize: '0.95rem' }}>
+                      {Math.round((provenance.quote_integrity_ratio ?? 1) * 100)}%
+                    </strong>
+                  </div>
+                  <div style={{ background: 'var(--surface-elevated)', padding: '0.5rem 0.65rem', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border)' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Independence</div>
+                    <strong style={{ color: 'var(--text-primary)', fontSize: '0.95rem' }}>
+                      {Math.round((provenance.source_independence_ratio ?? 1) * 100)}%
+                    </strong>
+                  </div>
+                  <div style={{ background: 'var(--surface-elevated)', padding: '0.5rem 0.65rem', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border)' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase' }}>Contradictions</div>
+                    <strong style={{ color: (provenance.contradiction_count ?? 0) > 0 ? 'var(--warning)' : 'var(--text-muted)', fontSize: '0.95rem' }}>
+                      {provenance.contradiction_count ?? 0}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Next-Best-Investigation VOI Trace */}
+        {(() => {
+          const trace = (run?.metrics_json as Record<string, unknown>)?.investigation_trace as
+            | {
+                enabled?: boolean
+                initial_recommendation?: string | null
+                final_recommendation?: string | null
+                recommendation_changed?: boolean
+                identified_gaps?: Array<{
+                  gap_type: string
+                  description: string
+                  impact_weight: number
+                }>
+                steps?: Array<{
+                  step_number: number
+                  query: string
+                  targeted_gap: string
+                  rationale: string
+                  heuristic_score: number
+                  new_sources_count: number
+                  new_claims_count: number
+                  prior_recommendation: string
+                  new_recommendation: string
+                  recommendation_changed: boolean
+                  termination_reason?: string | null
+                }>
+              }
+            | undefined
+
+          if (!trace || !trace.enabled) return null
+
+          return (
+            <div className="card">
+              <div className="card-header">
+                <div>
+                  <span className="card-title">Next-Best-Investigation</span>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    VOI Heuristic Information-Gain Trace
+                  </div>
+                </div>
+                <span className={`pill ${trace.recommendation_changed ? 'pill-warning' : 'pill-info'}`}>
+                  {trace.recommendation_changed ? 'POLICY SHIFTED' : 'CONFIRMED'}
+                </span>
+              </div>
+              <div className="card-body" style={{ fontSize: '0.82rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {trace.identified_gaps && trace.identified_gaps.length > 0 && (
+                  <div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
+                      Identified Evidence Gaps:
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      {trace.identified_gaps.map((gap, i) => (
+                        <div key={i} style={{ background: 'var(--surface-elevated)', padding: '0.35rem 0.5rem', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.76rem' }}>{gap.description}</span>
+                          <span className="pill pill-neutral" style={{ fontSize: '0.68rem' }}>
+                            w={(gap.impact_weight * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {trace.steps && trace.steps.length > 0 && (
+                  <div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
+                      Executed Follow-up Query:
+                    </div>
+                    {trace.steps.map((step, i) => (
+                      <div key={i} style={{ background: 'var(--surface-elevated)', padding: '0.5rem 0.65rem', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.2rem' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--accent)', fontSize: '0.78rem' }}>Step #{step.step_number}</span>
+                          <span className="pill pill-neutral" style={{ fontSize: '0.68rem' }}>
+                            VOI: {step.heuristic_score}
+                          </span>
+                        </div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.74rem', marginBottom: '0.3rem', wordBreak: 'break-all' }}>
+                          <code>{step.query}</code>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>New Sources: <strong>{step.new_sources_count}</strong> | Claims: <strong>{step.new_claims_count}</strong></span>
+                          <span style={{ color: step.recommendation_changed ? 'var(--warning)' : 'var(--accent)' }}>
+                            {step.prior_recommendation} → {step.new_recommendation}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Entity Resolution Card */}
         <div className="card">
           <div className="card-header">
