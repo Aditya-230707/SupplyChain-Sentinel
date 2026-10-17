@@ -74,6 +74,9 @@ class Supplier(Base):
     )
 
     # Relationships
+    facilities: Mapped[list[Facility]] = relationship(
+        "Facility", back_populates="supplier", cascade="all, delete-orphan", lazy="selectin"
+    )
     parts: Mapped[list[SupplierPart]] = relationship(
         "SupplierPart", back_populates="supplier", cascade="all, delete-orphan", lazy="selectin"
     )
@@ -82,6 +85,27 @@ class Supplier(Base):
     )
 
     __table_args__ = (Index("ix_suppliers_name_active", "name", "active"),)
+
+
+class Facility(Base):
+    """A manufacturing site, fabrication plant, or distribution facility operated by a supplier."""
+
+    __tablename__ = "facilities"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    supplier_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("suppliers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    facility_name: Mapped[str] = mapped_column(String(500), nullable=False)
+    facility_type: Mapped[str] = mapped_column(String(100), default="manufacturing", nullable=False)
+    country_or_region: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    city_or_address: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    criticality: Mapped[str] = mapped_column(String(20), default="high", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), default=_now, nullable=False
+    )
+
+    supplier: Mapped[Supplier] = relationship("Supplier", back_populates="facilities")
 
 
 class SupplierPart(Base):
@@ -305,6 +329,30 @@ class Claim(Base):
     source: Mapped[SourceDocument] = relationship("SourceDocument", back_populates="claims")
 
 
+class ClaimRelation(Base):
+    """Explicit semantic relationship between two extracted claims.
+
+    (e.g. corroborates, contradicts, supersedes, clarifies).
+    """
+
+    __tablename__ = "claim_relations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    claim_a_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("claims.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    claim_b_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("claims.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    # corroborates | contradicts | supersedes | clarifies
+    relation: Mapped[str] = mapped_column(String(40), nullable=False)
+    rationale: Mapped[str] = mapped_column(Text, nullable=False)
+    detected_rule: Mapped[str] = mapped_column(String(50), default="CR-001", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False), default=_now, nullable=False
+    )
+
+
 class IncidentCandidate(Base):
     """A clustered group of claims that appear to describe the same event."""
 
@@ -320,6 +368,9 @@ class IncidentCandidate(Base):
     # Nullable if supplier identity is ambiguous/unknown
     supplier_id: Mapped[str | None] = mapped_column(
         String(36), ForeignKey("suppliers.id"), nullable=True
+    )
+    facility_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("facilities.id", ondelete="SET NULL"), nullable=True
     )
     # e.g. operational_disruption
     event_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -338,6 +389,8 @@ class IncidentCandidate(Base):
     independent_support_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     contradiction_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     review_required: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # live | fixture | ddg
+    search_mode: Mapped[str] = mapped_column(String(20), default="fixture", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=False), default=_now, nullable=False
     )

@@ -33,6 +33,9 @@ from app.db.models import (
     Claim as ClaimModel,
 )
 from app.db.models import (
+    ClaimRelation as ClaimRelationModel,
+)
+from app.db.models import (
     ExposureAssessment as ExposureAssessmentModel,
 )
 from app.db.models import (
@@ -57,6 +60,12 @@ from app.pipeline.claim_validator import verify_quote_against_source
 from app.pipeline.entity_resolution import (
     SupplierProfile,
     resolve_supplier_entity,
+)
+from app.pipeline.evidence_graph import (
+    FacilityProfile,
+    build_investigation_evidence_graph,
+    detect_claim_semantic_relations,
+    resolve_facility_entity,
 )
 from app.pipeline.exposure_calculator import (
     PartExposureInput,
@@ -102,10 +111,13 @@ async def run_investigation(
     if not run:
         raise NotFoundError(f"Investigation {investigation_id} not found")
 
-    # Load supplier with parts
+    # Load supplier with parts and facilities
     stmt = (
         select(SupplierModel)
-        .options(selectinload(SupplierModel.parts))
+        .options(
+            selectinload(SupplierModel.parts),
+            selectinload(SupplierModel.facilities),
+        )
         .where(SupplierModel.id == run.supplier_id)
     )
     supplier = (await db.execute(stmt)).scalar_one_or_none()
@@ -125,6 +137,18 @@ async def run_investigation(
         country_or_region=supplier.country_or_region,
         parts=[p.part_name for p in supplier.parts],
     )
+
+    facilities_profile = [
+        FacilityProfile(
+            id=f.id,
+            name=f.facility_name,
+            facility_type=f.facility_type,
+            country_or_region=f.country_or_region,
+            city_or_address=f.city_or_address,
+            criticality=f.criticality,
+        )
+        for f in (supplier.facilities or [])
+    ]
 
     run.status = "searching"
     run.started_at = datetime.now(UTC).replace(tzinfo=None)
@@ -259,6 +283,13 @@ async def run_investigation(
                     location_text=claim_item.location_text,
                 )
 
+                # Facility Resolution
+                fac_res = resolve_facility_entity(
+                    claim_item.location_text,
+                    claim_item.subject_text,
+                    facilities_profile,
+                )
+
                 claim_model = ClaimModel(
                     investigation_id=run.id,
                     source_id=src_model.id,
@@ -284,6 +315,7 @@ async def run_investigation(
                     {
                         "claim_model": claim_model,
                         "entity_res": ent_res,
+                        "facility_res": fac_res,
                         "quote_val": q_val,
                     }
                 )
@@ -292,12 +324,45 @@ async def run_investigation(
 
     await db.flush()
 
+    # Stage 7b: Semantic Claim Relationships (Corroboration, Contradiction, Echo)
+    source_to_group: dict[str, str] = {}
+    for rel in lineage.relations:
+        if rel.relation in ("syndicated", "near_duplicate", "exact_duplicate"):
+            source_to_group[rel.source_b_id] = rel.source_a_id
+
+    claim_dicts_for_rel = [
+        {
+            "id": c["claim_model"].id,
+            "claim_type": c["claim_model"].claim_type,
+            "event_type": c["claim_model"].event_type,
+            "source_id": c["claim_model"].source_id,
+            "polarity": c["claim_model"].polarity,
+        }
+        for c in extracted_claims_list
+    ]
+    claim_semantic_rels = detect_claim_semantic_relations(claim_dicts_for_rel, source_to_group)
+    for cr in claim_semantic_rels:
+        cr_model = ClaimRelationModel(
+            claim_a_id=cr.claim_a_id,
+            claim_b_id=cr.claim_b_id,
+            relation=cr.relation,
+            rationale=cr.rationale,
+            detected_rule=cr.rule_id,
+        )
+        db.add(cr_model)
+    await db.flush()
+
+    has_contradictions = any(cr.relation == "contradicts" for cr in claim_semantic_rels)
+
     # Stage 8: Incident Candidate Synthesis
     run.status = "resolving"
     await db.flush()
 
     # Determine primary incident candidate if claims exist
     incident_model: IncidentCandidateModel | None = None
+    exposure_model: ExposureAssessmentModel | None = None
+    policy_model: PolicyDecisionModel | None = None
+
     if extracted_claims_list:
         # Determine aggregate entity match status
         statuses = [c["entity_res"].status for c in extracted_claims_list]
@@ -320,18 +385,37 @@ async def run_investigation(
         if has_resolutions:
             ev_status = "outdated_or_resolved"
 
+        # Matched facility if any
+        matched_fac_id = None
+        matched_fac_name = None
+        for c in extracted_claims_list:
+            fac = c["facility_res"]
+            if fac.status in ("confirmed", "probable") and fac.matched_facility:
+                matched_fac_id = fac.matched_facility.id
+                matched_fac_name = fac.matched_facility.name
+                break
+
         first_claim = extracted_claims_list[0]["claim_model"]
+        search_mode = run.metrics_json.get("search_mode", "fixture")
+        contra_count = sum(1 for cr in claim_semantic_rels if cr.relation == "contradicts")
         incident_model = IncidentCandidateModel(
             investigation_id=run.id,
             supplier_id=supplier.id if overall_entity_status in ("confirmed", "probable") else None,
+            facility_id=matched_fac_id,
+            search_mode=search_mode,
             event_type=first_claim.event_type or "operational_disruption",
-            facility_location=first_claim.location_text,
+            facility_location=matched_fac_name or first_claim.location_text,
             event_date_start=first_claim.event_date,
             claim_ids=[c["claim_model"].id for c in extracted_claims_list],
             entity_match_status=overall_entity_status,
             evidence_status=ev_status,
             reporting_group_count=lineage.reporting_group_count,
             independent_support_count=lineage.independent_support_count,
+            contradiction_summary=(
+                f"{contra_count} contradictory claim relationships detected."
+                if has_contradictions
+                else None
+            ),
             review_required=True,
         )
         db.add(incident_model)
@@ -378,7 +462,7 @@ async def run_investigation(
             evidence_status=ev_status,
             event_type=incident_model.event_type,
             reporting_group_count=lineage.reporting_group_count,
-            has_contradictions=False,
+            has_contradictions=has_contradictions,
             has_resolution_or_correction=has_resolutions,
             provider_failed=len(warnings) > 0 and not extracted_claims_list,
         )
@@ -401,6 +485,112 @@ async def run_investigation(
         )
         db.add(policy_model)
 
+    # Build Evidence DAG and Provenance Metrics
+    evidence_graph = build_investigation_evidence_graph(
+        supplier_data={
+            "id": supplier.id,
+            "name": supplier.name,
+            "criticality": supplier.criticality,
+            "country_or_region": supplier.country_or_region,
+            "official_domains": supplier.official_domains,
+        },
+        facilities_data=[
+            {
+                "id": f.id,
+                "facility_name": f.facility_name,
+                "facility_type": f.facility_type,
+                "city_or_address": f.city_or_address,
+                "country_or_region": f.country_or_region,
+            }
+            for f in (supplier.facilities or [])
+        ],
+        parts_data=[
+            {
+                "id": p.id,
+                "part_name": p.part_name,
+                "part_number": p.part_number,
+                "inventory_coverage_days": float(p.inventory_coverage_days)
+                if p.inventory_coverage_days is not None
+                else None,
+                "typical_lead_time_days": float(p.typical_lead_time_days)
+                if p.typical_lead_time_days is not None
+                else None,
+            }
+            for p in supplier.parts
+        ],
+        sources_data=[
+            {
+                "id": s.id,
+                "url_original": s.url_original,
+                "url_canonical": s.url_canonical,
+                "publisher_name": s.publisher_name,
+                "domain": s.domain,
+                "published_at": str(s.published_at) if s.published_at else None,
+                "retrieved_at": str(s.retrieved_at),
+                "content_status": s.content_status,
+                "content_hash": s.content_hash,
+            }
+            for s in source_db_records.values()
+        ],
+        source_relations_data=[
+            {
+                "source_a_id": rel.source_a_id,
+                "source_b_id": rel.source_b_id,
+                "relation": rel.relation,
+                "evidence": rel.evidence,
+            }
+            for rel in lineage.relations
+        ],
+        claims_data=[
+            {
+                "id": c["claim_model"].id,
+                "subject_text": c["claim_model"].subject_text,
+                "source_id": c["claim_model"].source_id,
+                "claim_type": c["claim_model"].claim_type,
+                "event_type": c["claim_model"].event_type,
+                "supporting_quote": c["claim_model"].supporting_quote,
+                "extraction_status": c["claim_model"].extraction_status,
+                "polarity": c["claim_model"].polarity,
+                "event_date": c["claim_model"].event_date,
+            }
+            for c in extracted_claims_list
+        ],
+        incident_data={
+            "id": incident_model.id,
+            "event_type": incident_model.event_type,
+            "entity_match_status": incident_model.entity_match_status,
+            "evidence_status": incident_model.evidence_status,
+            "reporting_group_count": incident_model.reporting_group_count,
+            "independent_support_count": incident_model.independent_support_count,
+            "claim_ids": incident_model.claim_ids,
+        }
+        if incident_model
+        else None,
+        exposure_data={
+            "id": exposure_model.id,
+            "potential_inventory_gap_days": float(exposure_model.potential_inventory_gap_days)
+            if exposure_model and exposure_model.potential_inventory_gap_days is not None
+            else None,
+            "exposure_band": exposure_model.exposure_band if exposure_model else "unknown",
+            "calculation_name": exposure_model.calculation_name if exposure_model else "none",
+        }
+        if exposure_model
+        else None,
+        policy_data={
+            "id": policy_model.id,
+            "recommendation": policy_model.recommendation,
+            "rule_ids_fired": policy_model.rule_ids_fired,
+            "reasons": policy_model.reasons,
+        }
+        if policy_model
+        else None,
+    )
+
+    run.metrics_json = {
+        **run.metrics_json,
+        "provenance": evidence_graph.metrics,
+    }
+
     # Append Audit Event
     audit_event = AuditEventModel(
         event_type="investigation_run",
@@ -411,6 +601,7 @@ async def run_investigation(
             "sources_count": len(source_candidates),
             "claims_count": len(extracted_claims_list),
             "warnings_count": len(warnings),
+            "provenance_score": evidence_graph.metrics.get("data_completeness_score"),
         },
     )
     db.add(audit_event)

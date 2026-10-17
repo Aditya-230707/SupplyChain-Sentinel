@@ -12,6 +12,8 @@ Endpoints:
 
 from __future__ import annotations
 
+from typing import Any
+
 import structlog
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -253,3 +255,175 @@ async def get_investigation_relations(
     )
     rows = (await db.execute(stmt)).scalars().all()
     return [SourceRelationRead.model_validate(r) for r in rows]
+
+
+@router.get("/investigations/{run_id}/graph")
+async def get_investigation_evidence_graph(
+    run_id: str,
+    db: AsyncSession = Depends(get_db_session),
+) -> dict[str, Any]:
+    """Get the full evidence provenance DAG and integrity metrics for an investigation."""
+    run = await db.get(InvestigationRunModel, run_id)
+    if not run:
+        raise NotFoundError(f"Investigation {run_id} not found")
+
+    supplier = (
+        await db.execute(
+            select(SupplierModel)
+            .options(
+                selectinload(SupplierModel.parts),
+                selectinload(SupplierModel.facilities),
+            )
+            .where(SupplierModel.id == run.supplier_id)
+        )
+    ).scalar_one_or_none()
+    if not supplier:
+        raise NotFoundError(f"Supplier {run.supplier_id} not found")
+
+    sources = (
+        (
+            await db.execute(
+                select(SourceDocumentModel).where(SourceDocumentModel.investigation_id == run_id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    claims = (
+        (await db.execute(select(ClaimModel).where(ClaimModel.investigation_id == run_id)))
+        .scalars()
+        .all()
+    )
+    src_ids = [s.id for s in sources]
+    source_rels: list[SourceRelationModel] = []
+    if src_ids:
+        source_rels = list(
+            (
+                await db.execute(
+                    select(SourceRelationModel).where(
+                        SourceRelationModel.source_a_id.in_(src_ids)
+                        | SourceRelationModel.source_b_id.in_(src_ids)
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    incident = (
+        (
+            await db.execute(
+                select(IncidentCandidateModel)
+                .options(
+                    selectinload(IncidentCandidateModel.exposure),
+                    selectinload(IncidentCandidateModel.policy_decision),
+                )
+                .where(IncidentCandidateModel.investigation_id == run_id)
+            )
+        )
+        .scalars()
+        .first()
+    )
+
+    from app.pipeline.evidence_graph import build_investigation_evidence_graph
+
+    graph = build_investigation_evidence_graph(
+        supplier_data={
+            "id": supplier.id,
+            "name": supplier.name,
+            "criticality": supplier.criticality,
+            "country_or_region": supplier.country_or_region,
+            "official_domains": supplier.official_domains,
+        },
+        facilities_data=[
+            {
+                "id": f.id,
+                "facility_name": f.facility_name,
+                "facility_type": f.facility_type,
+                "city_or_address": f.city_or_address,
+                "country_or_region": f.country_or_region,
+            }
+            for f in (supplier.facilities or [])
+        ],
+        parts_data=[
+            {
+                "id": p.id,
+                "part_name": p.part_name,
+                "part_number": p.part_number,
+                "inventory_coverage_days": float(p.inventory_coverage_days)
+                if p.inventory_coverage_days is not None
+                else None,
+                "typical_lead_time_days": float(p.typical_lead_time_days)
+                if p.typical_lead_time_days is not None
+                else None,
+            }
+            for p in supplier.parts
+        ],
+        sources_data=[
+            {
+                "id": s.id,
+                "url_original": s.url_original,
+                "url_canonical": s.url_canonical,
+                "publisher_name": s.publisher_name,
+                "domain": s.domain,
+                "published_at": str(s.published_at) if s.published_at else None,
+                "retrieved_at": str(s.retrieved_at),
+                "content_status": s.content_status,
+                "content_hash": s.content_hash,
+            }
+            for s in sources
+        ],
+        source_relations_data=[
+            {
+                "source_a_id": rel.source_a_id,
+                "source_b_id": rel.source_b_id,
+                "relation": rel.relation,
+                "evidence": rel.evidence,
+            }
+            for rel in source_rels
+        ],
+        claims_data=[
+            {
+                "id": c.id,
+                "subject_text": c.subject_text,
+                "source_id": c.source_id,
+                "claim_type": c.claim_type,
+                "event_type": c.event_type,
+                "supporting_quote": c.supporting_quote,
+                "extraction_status": c.extraction_status,
+                "polarity": c.polarity,
+                "event_date": c.event_date,
+            }
+            for c in claims
+        ],
+        incident_data={
+            "id": incident.id,
+            "event_type": incident.event_type,
+            "entity_match_status": incident.entity_match_status,
+            "evidence_status": incident.evidence_status,
+            "reporting_group_count": incident.reporting_group_count,
+            "independent_support_count": incident.independent_support_count,
+            "claim_ids": incident.claim_ids,
+        }
+        if incident
+        else None,
+        exposure_data={
+            "id": incident.exposure.id,
+            "potential_inventory_gap_days": float(incident.exposure.potential_inventory_gap_days)
+            if incident.exposure.potential_inventory_gap_days is not None
+            else None,
+            "exposure_band": incident.exposure.exposure_band,
+            "calculation_name": incident.exposure.calculation_name,
+        }
+        if incident and incident.exposure
+        else None,
+        policy_data={
+            "id": incident.policy_decision.id,
+            "recommendation": incident.policy_decision.recommendation,
+            "rule_ids_fired": incident.policy_decision.rule_ids_fired,
+            "reasons": incident.policy_decision.reasons,
+        }
+        if incident and incident.policy_decision
+        else None,
+    )
+    return graph.to_dict()

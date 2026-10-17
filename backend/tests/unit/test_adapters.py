@@ -238,14 +238,15 @@ async def test_ddg_content_ssrf_blocking() -> None:
     provider = DuckDuckGoContentProvider()
 
     # Blocked URLs (localhost, private IP, invalid scheme)
-    results = await provider.extract([
-        "http://localhost:8000/internal",
-        "http://192.168.1.1/admin",
-        "ftp://example.com/file",
-    ])
+    results = await provider.extract(
+        [
+            "http://localhost:8000/internal",
+            "http://192.168.1.1/admin",
+            "ftp://example.com/file",
+        ]
+    )
 
     assert len(results) == 3
     for r in results:
         assert r.status == "inaccessible"
         assert "private or invalid" in (r.error_message or "")
-
