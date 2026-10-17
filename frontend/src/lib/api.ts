@@ -200,7 +200,7 @@ export interface InvestigationRun {
 export interface InvestigationCreatePayload {
   supplier_id: string
   requested_categories?: string[]
-  search_mode?: 'fixture' | 'live'
+  search_mode?: 'fixture' | 'live' | 'ddg'
   date_range_start?: string | null
   date_range_end?: string | null
 }

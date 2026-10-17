@@ -96,6 +96,12 @@ async def providers_health(settings: Settings = Depends(get_settings)) -> Provid
             configured=True,
             reachable=None,
         )
+    else:
+        search_health = ProviderHealth(
+            provider_name="duckduckgo_search",
+            configured=True,
+            reachable=None,
+        )
 
     return ProvidersHealthResponse(llm=llm_health, search=search_health)
 

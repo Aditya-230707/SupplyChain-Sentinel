@@ -67,7 +67,11 @@ async def create_investigation(
         raise NotFoundError(f"Supplier {payload.supplier_id} not found")
 
     search_mode = payload.search_mode
-    if search_mode == "live":
+    if search_mode == "ddg":
+        from app.providers.ddg_provider import make_ddg_providers
+
+        search, content = make_ddg_providers()
+    elif search_mode == "live":
         settings = get_settings()
         if not settings.tavily_api_key:
             raise ProviderUnavailableError(
@@ -76,7 +80,7 @@ async def create_investigation(
             )
         search, content = make_tavily_providers_from_settings()
     else:
-        # Fixture mode (default): rich demo scenarios tailored to supplier name
+        # Fixture mode: rich demo scenarios tailored to supplier name
         search, content = get_demo_fixture_providers(supplier.name)
 
     run = InvestigationRunModel(

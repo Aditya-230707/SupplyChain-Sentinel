@@ -42,9 +42,9 @@ class InvestigationCreate(BaseModel):
         description="ISO date string — search results before this date are deprioritized",
     )
     date_range_end: str | None = None
-    search_mode: Literal["fixture", "live"] = Field(
-        default="fixture",
-        description="Search mode: 'fixture' for demo, 'live' for Tavily",
+    search_mode: Literal["fixture", "live", "ddg"] = Field(
+        default="ddg",
+        description="Search mode: 'ddg' (DuckDuckGo), 'live' (Tavily), or 'fixture' (demo)",
     )
 
     @classmethod

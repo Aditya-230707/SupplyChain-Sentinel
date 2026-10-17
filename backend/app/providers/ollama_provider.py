@@ -22,7 +22,9 @@ from tenacity import (
 )
 
 from app.core.errors import (
+    ProviderAuthError,
     ProviderError,
+    ProviderQuotaError,
     ProviderUnavailableError,
     SchemaValidationError,
 )
@@ -69,8 +71,16 @@ class OllamaProvider:
         temperature: float = 0.0,
         max_tokens: int = 4096,
     ) -> ModelResult:
+        import httpx
+
         schema = response_model.model_json_schema()
         user_content = json.dumps(user_payload, ensure_ascii=False)
+        system_content = (
+            f"{system_prompt}\n\n"
+            f"You MUST return valid JSON adhering strictly to this JSON Schema:\n"
+            f"{json.dumps(schema, indent=2)}\n"
+            f"Do not include markdown code block fences. Output strictly valid JSON."
+        )
 
         start = time.perf_counter()
         retry_count = 0
@@ -81,48 +91,57 @@ class OllamaProvider:
             wait=wait_exponential_jitter(multiplier=1, max=10),
             reraise=True,
         )
-        async def _call() -> Any:
+        async def _call() -> dict[str, Any]:
             nonlocal retry_count
-            client = self._get_client()
             try:
-                response = await client.chat.completions.create(
-                    model=self.model_id,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_content},
-                    ],
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    # Ollama JSON-schema structured output
-                    response_format={
-                        "type": "json_schema",
-                        "json_schema": {
-                            "name": response_model.__name__,
-                            "schema": schema,
-                            "strict": True,
+                async with httpx.AsyncClient(timeout=180.0) as client:
+                    resp = await client.post(
+                        f"{self.base_url}/api/chat",
+                        json={
+                            "model": self.model_id,
+                            "messages": [
+                                {"role": "system", "content": system_content},
+                                {"role": "user", "content": user_content},
+                            ],
+                            "stream": False,
+                            "format": "json",
+                            "options": {
+                                "temperature": temperature,
+                                "num_predict": max_tokens,
+                            },
                         },
-                    },
-                )
-                return response
+                    )
+                    if resp.status_code in (401, 403):
+                        msg = f"Ollama auth error: {resp.status_code} {resp.text}"
+                        raise ProviderAuthError(msg)
+                    if resp.status_code == 429:
+                        msg = f"Ollama quota: {resp.status_code} {resp.text}"
+                        raise ProviderQuotaError(msg)
+                    if resp.status_code != 200:
+                        retry_count += 1
+                        msg = f"Ollama HTTP error {resp.status_code}: {resp.text}"
+                        raise ProviderError(msg)
+                    return resp.json()
+            except (ProviderAuthError, ProviderQuotaError):
+                raise
             except Exception as exc:
-                err_str = str(exc)
-                # Classify error — do not retry auth/quota errors
-                if "401" in err_str or "403" in err_str:
-                    from app.core.errors import ProviderAuthError
-
-                    raise ProviderAuthError(f"Ollama auth error: {err_str}") from exc
-                if "429" in err_str:
-                    from app.core.errors import ProviderQuotaError
-
-                    raise ProviderQuotaError(f"Ollama quota: {err_str}") from exc
                 retry_count += 1
-                raise ProviderError(f"Ollama error: {err_str}") from exc
+                raise ProviderError(f"Ollama call error: {exc!s}") from exc
 
-        response = await _call()
+        data = await _call()
         elapsed_ms = (time.perf_counter() - start) * 1000
 
-        raw_text = response.choices[0].message.content or ""
-        usage = response.usage
+        msg_obj = data.get("message", {})
+        raw_text = msg_obj.get("content", "").strip()
+
+        # Strip accidental markdown fences if model emitted them
+        if raw_text.startswith("```json"):
+            raw_text = raw_text[7:]
+        elif raw_text.startswith("```"):
+            raw_text = raw_text[3:]
+        if raw_text.endswith("```"):
+            raw_text = raw_text[:-3]
+        raw_text = raw_text.strip()
 
         # Parse and validate against schema
         try:
@@ -138,14 +157,17 @@ class OllamaProvider:
                 f"Ollama output did not match {response_model.__name__} schema"
             ) from exc
 
+        tokens_in = data.get("prompt_eval_count")
+        tokens_out = data.get("eval_count")
+
         log.info(
             "ollama_inference_ok",
             task=task_name,
             model=self.model_id,
             elapsed_ms=round(elapsed_ms, 1),
             retry_count=retry_count,
-            tokens_in=getattr(usage, "prompt_tokens", None),
-            tokens_out=getattr(usage, "completion_tokens", None),
+            tokens_in=tokens_in,
+            tokens_out=tokens_out,
         )
 
         return ModelResult(
@@ -154,8 +176,8 @@ class OllamaProvider:
             model_id=self.model_id,
             elapsed_ms=elapsed_ms,
             retry_count=retry_count,
-            tokens_prompt=getattr(usage, "prompt_tokens", None),
-            tokens_completion=getattr(usage, "completion_tokens", None),
+            tokens_prompt=tokens_in,
+            tokens_completion=tokens_out,
         )
 
     async def health_check(self) -> dict[str, object]:
