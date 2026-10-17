@@ -29,6 +29,9 @@ dependencies = [
     "openai>=1.35.0,<2.0",
     # Structured logging
     "structlog>=24.2.0,<25.0",
+    # Live public search and content extraction
+    "ddgs>=9.16.0",
+    "beautifulsoup4>=4.12.0",
     # Date/time utilities
     "python-dateutil>=2.9.0",
     # UUID generation (ULID-style sorting)

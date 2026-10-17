@@ -2,9 +2,17 @@
 # Usage: make <target>
 # Requires: Python 3.12, Node.js 18+, Ollama
 
-PYTHON  := backend\\.venv\\Scripts\\python.exe
-PYTEST  := backend\\.venv\\Scripts\\pytest.exe
-RUFF    := backend\\.venv\\Scripts\\ruff.exe
+ifeq ($(OS),Windows_NT)
+    VENV_BIN := backend/venv/Scripts
+    PYTHON   := backend/.venv/Scripts/python.exe
+    PYTEST   := backend/.venv/Scripts/pytest.exe
+    RUFF     := backend/.venv/Scripts/ruff.exe
+else
+    VENV_BIN := backend/.venv/bin
+    PYTHON   := $(VENV_BIN)/python
+    PYTEST   := $(VENV_BIN)/pytest
+    RUFF     := $(VENV_BIN)/ruff
+endif
 
 .PHONY: install install-backend install-frontend
 .PHONY: dev dev-backend dev-frontend

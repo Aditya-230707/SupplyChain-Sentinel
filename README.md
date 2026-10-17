@@ -29,7 +29,7 @@ Enterprise supply chain teams are bombarded by breaking news, wire alerts, and s
 ## 2. Architecture & Core Pipeline
 
 ```
-[Public Reports / News] ───► [Search Provider (Fixture or Tavily)]
+[Public Reports / News] ───► [Search Provider (DuckDuckGo / Tavily / Fixture)]
                                         │
                                         ▼
                              [Source Normalizer]
@@ -157,16 +157,25 @@ To run entirely locally with open-weights LLMs:
 
 ---
 
-## 6. Live Web Search: Tavily Integration
+## 6. Live Web Search: DuckDuckGo & Tavily Integrations
 
-When live web search is desired:
+Sentinel supports multiple search providers for discovering and retrieving supplier incidents:
+
+### A. DuckDuckGo Live Search (Zero API Keys Required)
+By default, Sentinel can query real-time public web news and incident wires via DuckDuckGo without requiring external API keys:
+- Extracts live publisher metadata, publication timestamps, and source URLs.
+- Fetches and parses target article HTML with `beautifulsoup4` and `httpx`.
+- In the UI intake form, select **"DuckDuckGo Live Search"** to run live discovery out-of-the-box.
+
+### B. Tavily Live Search (API Key Integration)
+For enterprise-grade curated search feeds:
 1. Obtain an API key from [Tavily](https://tavily.com/).
 2. In `.env`, set:
    ```env
    TAVILY_API_KEY=tvly-your-actual-api-key
    ```
-3. In the UI, the search mode toggle will allow selecting **"Live Tavily Search"**.
-4. **Zero Silent Fallbacks:** If a live search request fails (e.g. rate limit, bad network), Sentinel displays an explicit error alert with a retry button. It **never** silently substitutes fake fixture data in live mode.
+3. In the UI, select **"Tavily Live Search"**.
+4. **Zero Silent Fallbacks:** If a live search fails (e.g. rate limit or network error), Sentinel displays an explicit error alert with a retry option. It **never** silently substitutes simulated fixture data during live investigations.
 
 ---
 
