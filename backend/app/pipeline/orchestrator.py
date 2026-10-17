@@ -438,9 +438,21 @@ async def run_investigation(
             )
 
         exposure_res = calculate_operational_exposure(part_input)
+        exposure_inputs_rich = {
+            **exposure_res.input_values,
+            "scenarios": exposure_res.scenarios,
+            "expected_decision_losses": exposure_res.expected_decision_losses,
+            "sensitivity_analysis": exposure_res.sensitivity_analysis,
+            "gap_min_days": float(exposure_res.potential_inventory_gap_min_days)
+            if exposure_res.potential_inventory_gap_min_days is not None
+            else None,
+            "gap_max_days": float(exposure_res.potential_inventory_gap_max_days)
+            if exposure_res.potential_inventory_gap_max_days is not None
+            else None,
+        }
         exposure_model = ExposureAssessmentModel(
             incident_id=incident_model.id,
-            input_values_json=exposure_res.input_values,
+            input_values_json=exposure_inputs_rich,
             calculation_name=exposure_res.calculation_name,
             calculation_version=exposure_res.calculation_version,
             potential_inventory_gap_days=exposure_res.potential_inventory_gap_days,
