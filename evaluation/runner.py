@@ -1,5 +1,4 @@
-"""
-Evaluation Benchmark Runner for SupplyChain Sentinel.
+"""Evaluation Benchmark Runner for SupplyChain Sentinel.
 
 Compares:
 1. Baseline LLM Approach: Raw prompt + ungrounded summary/recommendation without deterministic verification.
@@ -57,7 +56,7 @@ class CaseEvaluationResult:
     sentinel_escalated: bool
     sentinel_handled_uncertainty: bool
 
-    # Baseline results (simulating raw ungrounded LLM)
+    # Baseline results (recorded ungrounded LLM)
     baseline_attribution: str
     baseline_attribution_correct: bool
     baseline_quotes_verified: bool
@@ -69,7 +68,7 @@ class CaseEvaluationResult:
 
 def run_evaluation() -> dict[str, Any]:
     dataset_path = Path(__file__).parent / "benchmark_dataset_v1.json"
-    with open(dataset_path, "r", encoding="utf-8") as f:
+    with dataset_path.open(encoding="utf-8") as f:
         dataset = json.load(f)
 
     results: list[CaseEvaluationResult] = []
@@ -79,11 +78,13 @@ def run_evaluation() -> dict[str, Any]:
         c_name = case["name"]
         target = case["target_supplier"]
         sources = case["sources"]
+        claim = case["extracted_claim"]
+        base_eval = case["baseline_evaluation"]
         expected_policy = case["expected_policy_recommendation"]
         expected_escalate = case["should_escalate"]
 
         # ---- 1. RUN SUPPLYCHAIN SENTINEL PIPELINE ----
-        # A. Normalization & Lineage
+        # A. Normalization & Lineage Clustering
         source_records: list[SourceCandidate] = []
         for i, s in enumerate(sources):
             canon_url = canonicalize_url(s["url"])
@@ -102,25 +103,12 @@ def run_evaluation() -> dict[str, Any]:
 
         lineage_res = analyze_source_lineage(source_records)
 
-        # B. Claim Extraction & Rule E-005 Quote Verification
-        # In Sentinel, quotes must exist verbatim in source text
-        quotes_valid = True
-        extracted_duration: Decimal | None = None
-        has_resolution = False
-
-        for s in sources:
-            text = s["text"]
-            if "cleanroom fire" in text.lower():
-                quote = (
-                    f"{target['name']} experienced a severe cleanroom fire on Tuesday."
-                )
-                q_match = verify_quote_against_source(quote, text)
-                if not q_match.is_valid:
-                    quotes_valid = False
-            if "45 days" in text:
-                extracted_duration = Decimal(45)
-            if "false alarm" in text.lower() or "drill" in text.lower():
-                has_resolution = True
+        # B. Claim Extraction & Rule E-005 Exact Quote Verification
+        # Verifies the extracted supporting quote mathematically against all source texts
+        quote_text = claim.get("supporting_quote", "")
+        quotes_valid = any(
+            verify_quote_against_source(quote_text, s["text"]).is_valid for s in sources
+        )
 
         # C. Multi-Signal Entity Resolution (ID-001 to ID-005)
         sup_target = SupplierProfile(
@@ -131,20 +119,16 @@ def run_evaluation() -> dict[str, Any]:
             country_or_region=target.get("country"),
         )
 
-        first_text = sources[0]["text"]
-        first_domain = sources[0]["domain"]
         entity_res = resolve_supplier_entity(
             supplier=sup_target,
-            subject_text=target["name"] if c_id != "CASE-03" else "Vertex Ltd",
-            source_text=first_text,
-            source_domain=first_domain,
-            location_text="Melbourne, Australia"
-            if c_id == "CASE-03"
-            else target.get("country"),
+            subject_text=claim["subject_entity_name"],
+            source_text=sources[0]["text"],
+            source_domain=sources[0]["domain"],
+            location_text=claim.get("location"),
         )
 
-        # Accept either exact match, or 'ambiguous' when expected is 'mismatch'
-        # (both are defensive non-confirmed attributions that block false escalation)
+        # Attribution check: matches expected status, or defensive non-confirmation
+        # (both 'ambiguous' and 'mismatch' successfully prevent false escalation)
         sentinel_attr_correct = entity_res.status == case[
             "expected_identity_status"
         ] or (
@@ -163,6 +147,12 @@ def run_evaluation() -> dict[str, Any]:
             Decimal(str(part_info["typical_lead_time_days"]))
             if part_info.get("typical_lead_time_days") is not None
             else None
+        )
+        duration_val = claim.get("estimated_duration_days")
+        extracted_duration = (
+            Decimal(str(duration_val))
+            if duration_val is not None and duration_val > 0
+            else (Decimal(0) if duration_val == 0 else None)
         )
 
         part_input = PartExposureInput(
@@ -186,9 +176,9 @@ def run_evaluation() -> dict[str, Any]:
             evidence_status="corroborated"
             if lineage_res.independent_support_count > 1
             else "single_source",
-            event_type="operational_disruption" if c_id != "CASE-08" else None,
+            event_type=claim.get("event_type"),
             reporting_group_count=lineage_res.reporting_group_count,
-            has_resolution_or_correction=has_resolution,
+            has_resolution_or_correction=claim.get("has_resolution", False),
         )
 
         policy_res = evaluate_policy_rules(evidence_snap, exposure_res, entity_res)
@@ -205,93 +195,20 @@ def run_evaluation() -> dict[str, Any]:
         ):
             sentinel_handled_uncertainty = False
 
-        # Duplicate handling check
+        # Duplicate wire handling check
         sentinel_dup_handled = True
         if c_id in ("CASE-01", "CASE-04") and (
             lineage_res.independent_support_count > case["expected_independent_sources"]
         ):
-            # Should not count syndicated wire copies as independent sources
             sentinel_dup_handled = False
 
-        # ---- 2. RUN BASELINE SIMULATION (Ungrounded LLM) ----
-        # Simulated raw LLM behavior based on typical benchmark observations:
-        # - Entity resolution: naive string match fails on "Vertex Ltd" (CASE-03)
-        # - Lineage: treats every URL as an independent confirmation (CASE-01, CASE-04)
-        # - Exposure: assumes missing inventory is 0 or hallucinates values (CASE-07)
-        # - Policy: escalates whenever scary words ("explosion", "fire") are mentioned (CASE-02, CASE-03)
-        if c_id == "CASE-01":
-            baseline_rec = "urgent_human_review"
-            baseline_escalated = True
-            baseline_attr_correct = True
-            baseline_quotes_valid = True
-            baseline_dup_handled = (
-                False  # counts 3 separate articles as 3 distinct sources
-            )
-            baseline_uncertainty = True
-        elif c_id == "CASE-02":
-            # Baseline sees "transformer explosion" and panics
-            baseline_rec = "urgent_human_review"
-            baseline_escalated = True  # False escalation!
-            baseline_attr_correct = True
-            baseline_quotes_valid = True
-            baseline_dup_handled = True
-            baseline_uncertainty = False
-        elif c_id == "CASE-03":
-            # Baseline sees "Vertex Ltd", ignores Australia vs UK distinction
-            baseline_rec = "urgent_human_review"
-            baseline_escalated = True  # False escalation on wrong company!
-            baseline_attr_correct = False
-            baseline_quotes_valid = True
-            baseline_dup_handled = True
-            baseline_uncertainty = False
-        elif c_id == "CASE-04":
-            # Baseline counts 2 wire reprints as 2 independent confirmations
-            baseline_rec = "urgent_human_review"
-            baseline_escalated = (
-                True  # Premature escalation without single-source confirmation
-            )
-            baseline_attr_correct = True
-            baseline_quotes_valid = True
-            baseline_dup_handled = False
-            baseline_uncertainty = True
-        elif c_id == "CASE-05":
-            # Baseline notes chemical drill but suggests "review alternate sourcing" just in case
-            baseline_rec = "review_contingency_plan"
-            baseline_escalated = True
-            baseline_attr_correct = True
-            baseline_quotes_valid = True
-            baseline_dup_handled = True
-            baseline_uncertainty = False
-        elif c_id == "CASE-06":
-            # Baseline treats forum rumor as probable disruption
-            baseline_rec = "review_contingency_plan"
-            baseline_escalated = True
-            baseline_attr_correct = True
-            baseline_quotes_valid = False  # Forum rumors often paraphrased
-            baseline_dup_handled = True
-            baseline_uncertainty = False
-        elif c_id == "CASE-07":
-            # Baseline invents a 14-day duration and assumes 0 inventory, calculating a 14-day gap
-            baseline_rec = "urgent_human_review"
-            baseline_escalated = True
-            baseline_attr_correct = True
-            baseline_quotes_valid = True
-            baseline_dup_handled = True
-            baseline_uncertainty = False  # Failed: hallucinated missing inventory
-        elif c_id == "CASE-08":
-            baseline_rec = "monitor"
-            baseline_escalated = False
-            baseline_attr_correct = True
-            baseline_quotes_valid = True
-            baseline_dup_handled = True
-            baseline_uncertainty = True
-        else:
-            baseline_rec = "monitor"
-            baseline_escalated = False
-            baseline_attr_correct = True
-            baseline_quotes_valid = True
-            baseline_dup_handled = True
-            baseline_uncertainty = True
+        # ---- 2. RECORD BASELINE SIMULATION (Ungrounded LLM) ----
+        baseline_rec = base_eval["recommendation"]
+        baseline_escalated = base_eval["escalated"]
+        baseline_attr_correct = base_eval["attribution_correct"]
+        baseline_quotes_valid = base_eval["quotes_valid"]
+        baseline_dup_handled = base_eval["duplicates_handled"]
+        baseline_uncertainty = base_eval["handled_uncertainty"]
 
         results.append(
             CaseEvaluationResult(
@@ -318,8 +235,8 @@ def run_evaluation() -> dict[str, Any]:
         )
 
     # ---- AGGREGATE METRICS WITH EXPLICIT DENOMINATORS ----
-    total_cases = len(results)  # 8
-    non_escalate_cases = [r for r in results if not r.expected_escalation]  # 7
+    total_cases = len(results)  # 9
+    non_escalate_cases = [r for r in results if not r.expected_escalation]  # 8
     critical_cases = [r for r in results if r.expected_escalation]  # 1 (CASE-01)
     wire_duplicate_cases = [
         r for r in results if r.case_id in ("CASE-01", "CASE-04")
@@ -420,7 +337,7 @@ def run_evaluation() -> dict[str, Any]:
     }
 
     output_path = Path(__file__).parent / "evaluation_results.json"
-    with open(output_path, "w", encoding="utf-8") as f:
+    with output_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
 
     return summary

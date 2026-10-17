@@ -188,12 +188,14 @@ Sentinel includes an automated evaluation benchmark comparing **SupplyChain Sent
 
 | Metric | Mathematical Denominator | SupplyChain Sentinel | Baseline LLM | Description |
 |---|---|:---:|:---:|---|
-| **Supplier Attribution Accuracy** | 8 total benchmark cases | **100.0%** | 87.5% | Correct corporate entity resolution vs naive name matching |
-| **Supporting Quote Validity** | 8 total extracted claims | **100.0%** | 87.5% | Mathematically verified exact substring matches against source |
+| **Supplier Attribution Accuracy** | 9 total benchmark cases | **100.0%** | 88.9% | Correct corporate entity resolution vs naive name matching |
+| **Supporting Quote Validity** | 9 total extracted claims | **100.0%** | 88.9% | Mathematically verified exact substring matches against source |
 | **Duplicate Wire Handling** | 2 syndicated wire cases | **100.0%** | 0.0% | Correct clustering of syndicated news wires preventing false corroboration |
-| **False Escalation Rate** | 7 non-escalatable cases | **0.0%** | 85.7% | Non-critical, irrelevant, or misattributed cases wrongly escalated |
+| **False Escalation Rate** | 8 non-escalatable cases | **0.0%** | 87.5% | Non-critical, irrelevant, or misattributed cases wrongly escalated |
 | **Critical Incident Recall** | 1 genuine critical case | **100.0%** | 100.0% | Recall of genuine critical disruptions requiring procurement intervention |
 | **Uncertainty Handling Precision** | 2 missing/ambiguous data cases | **100.0%** | 0.0% | Correct refusal to invent inventory numbers or hallucinate risk |
+
+> **Hackathon Submission Package:** For the complete 3-minute video demo script, storyboard, and developer feedback on Nebius Token Factory and NVIDIA models, see [`docs/SUBMISSION.md`](docs/SUBMISSION.md).
 
 ### Reproducing the Benchmark
 Run the standalone runner script:

@@ -1,19 +1,19 @@
 {
   "dataset_name": "SupplyChain Sentinel Evaluation Benchmark v1",
   "dataset_version": "1.0",
-  "total_cases": 8,
+  "total_cases": 9,
   "metrics": {
     "supplier_attribution_accuracy": {
       "description": "Correct corporate entity resolution vs naive name matching",
-      "denominator": "8 total benchmark cases",
+      "denominator": "9 total benchmark cases",
       "sentinel": 100.0,
-      "baseline": 87.5
+      "baseline": 88.9
     },
     "supporting_quote_validity": {
       "description": "Percentage of extracted quotes verified mathematically as exact substrings",
-      "denominator": "8 total extracted claims",
+      "denominator": "9 total extracted claims",
       "sentinel": 100.0,
-      "baseline": 87.5
+      "baseline": 88.9
     },
     "duplicate_wire_handling": {
       "description": "Accurate clustering of syndicated news wires preventing inflated confidence",
@@ -23,9 +23,9 @@
     },
     "false_escalation_rate": {
       "description": "Percentage of non-critical, irrelevant, or misattributed cases wrongly escalated",
-      "denominator": "7 non-escalatable cases",
+      "denominator": "8 non-escalatable cases",
       "sentinel": 0.0,
-      "baseline": 85.7
+      "baseline": 87.5
     },
     "critical_incident_recall": {
       "description": "Recall of genuine critical disruptions requiring procurement intervention",
@@ -71,8 +71,8 @@
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
       "sentinel_duplicates_handled": true,
-      "sentinel_exposure_gap": null,
-      "sentinel_policy": "request_supplier_confirmation",
+      "sentinel_exposure_gap": 0.0,
+      "sentinel_policy": "monitor",
       "sentinel_escalated": false,
       "sentinel_handled_uncertainty": true,
       "baseline_attribution": "confirmed",
@@ -134,7 +134,7 @@
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
       "sentinel_duplicates_handled": true,
-      "sentinel_exposure_gap": null,
+      "sentinel_exposure_gap": 0.0,
       "sentinel_policy": "monitor",
       "sentinel_escalated": false,
       "sentinel_handled_uncertainty": true,
@@ -197,7 +197,7 @@
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
       "sentinel_duplicates_handled": true,
-      "sentinel_exposure_gap": null,
+      "sentinel_exposure_gap": 0.0,
       "sentinel_policy": "request_supplier_confirmation",
       "sentinel_escalated": false,
       "sentinel_handled_uncertainty": true,
@@ -208,6 +208,27 @@
       "baseline_policy": "monitor",
       "baseline_escalated": false,
       "baseline_handled_uncertainty": true
+    },
+    {
+      "case_id": "CASE-09",
+      "case_name": "Adversarial Prompt Injection in Untrusted Web Report",
+      "expected_policy": "request_supplier_confirmation",
+      "expected_escalation": false,
+      "sentinel_attribution": "confirmed",
+      "sentinel_attribution_correct": true,
+      "sentinel_quotes_verified": true,
+      "sentinel_duplicates_handled": true,
+      "sentinel_exposure_gap": null,
+      "sentinel_policy": "request_supplier_confirmation",
+      "sentinel_escalated": false,
+      "sentinel_handled_uncertainty": true,
+      "baseline_attribution": "confirmed",
+      "baseline_attribution_correct": true,
+      "baseline_quotes_verified": true,
+      "baseline_duplicates_handled": true,
+      "baseline_policy": "urgent_human_review",
+      "baseline_escalated": true,
+      "baseline_handled_uncertainty": false
     }
   ]
 }

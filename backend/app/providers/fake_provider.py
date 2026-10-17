@@ -84,6 +84,47 @@ class FakeLLMProvider:
 
         if self._queue:
             output = self._queue.popleft()
+        elif response_model.__name__ == "ClaimExtractionResponse":
+            from app.schemas.claim import ClaimExtractionResponse, ExtractedClaimItem
+
+            src_text = str(user_payload.get("source_text", ""))
+            supplier_ctx = user_payload.get("supplier_context", {})
+            supplier_name = supplier_ctx.get("name", "Supplier")
+
+            claims: list[ExtractedClaimItem] = []
+            if src_text:
+                for sentence in src_text.split(". "):
+                    s_clean = sentence.strip()
+                    if not s_clean:
+                        continue
+                    if any(
+                        kw in s_clean.lower()
+                        for kw in (
+                            "fire",
+                            "explosion",
+                            "strike",
+                            "halt",
+                            "shutdown",
+                            "damage",
+                            "drill",
+                            "disruption",
+                            "flood",
+                            "earthquake",
+                        )
+                    ):
+                        quote = s_clean if s_clean.endswith(".") else f"{s_clean}."
+                        claims.append(
+                            ExtractedClaimItem(
+                                subject_text=supplier_name,
+                                event_type="operational_disruption",
+                                object_text=quote,
+                                claim_type="incident",
+                                polarity="supports",
+                                supporting_quote=quote,
+                            )
+                        )
+                        break
+            output = ClaimExtractionResponse(claims=claims)
         else:
             # Return a default empty-ish valid instance if no responses configured
             # This allows smoke tests that don't care about output content

@@ -71,6 +71,75 @@ async def init_db() -> None:
 
     log.info("db_tables_created_or_verified")
 
+    # Seed initial demo suppliers if DB is freshly created and not in test mode
+    settings = get_settings()
+    if settings.app_env != "test":
+        factory = get_session_factory()
+        async with factory() as session:
+            from decimal import Decimal
+
+        from sqlalchemy import select
+
+        from app.db.models import Supplier as SupplierModel
+        from app.db.models import SupplierPart as SupplierPartModel
+
+        stmt = select(SupplierModel).limit(1)
+        existing = (await session.execute(stmt)).first()
+        if not existing:
+            s1 = SupplierModel(
+                name="Silicon Foundry Dresden GmbH",
+                aliases=["SFD", "Dresden Fab"],
+                country_or_region="Germany",
+                official_domains=["silicon-dresden.de"],
+                criticality="high",
+            )
+            s1.parts.append(
+                SupplierPartModel(
+                    part_name="Automotive Microcontroller MCU-4",
+                    part_number="MCU-4-DRESDEN",
+                    inventory_coverage_days=Decimal("14"),
+                    typical_lead_time_days=Decimal("60"),
+                    recovery_duration_days=Decimal("45"),
+                )
+            )
+
+            s2 = SupplierModel(
+                name="Titan Energy Solutions",
+                aliases=["Titan Energy"],
+                country_or_region="United States",
+                official_domains=["titan-energy.com"],
+                criticality="medium",
+            )
+            s2.parts.append(
+                SupplierPartModel(
+                    part_name="Industrial Battery Module Pack-B",
+                    part_number="BAT-MOD-B",
+                    inventory_coverage_days=Decimal("30"),
+                    typical_lead_time_days=Decimal("45"),
+                    recovery_duration_days=Decimal("0"),
+                )
+            )
+
+            s3 = SupplierModel(
+                name="Vertex Components Ltd",
+                aliases=["Vertex UK"],
+                country_or_region="United Kingdom",
+                official_domains=["vertex-components.co.uk"],
+                criticality="high",
+            )
+            s3.parts.append(
+                SupplierPartModel(
+                    part_name="Aerospace Titanium Fastener",
+                    part_number="AERO-FAST-9",
+                    inventory_coverage_days=Decimal("45"),
+                    typical_lead_time_days=Decimal("90"),
+                )
+            )
+
+            session.add_all([s1, s2, s3])
+            await session.commit()
+            log.info("demo_suppliers_seeded")
+
 
 async def get_db_session() -> AsyncIterator[AsyncSession]:
     """FastAPI dependency that yields a database session per request."""

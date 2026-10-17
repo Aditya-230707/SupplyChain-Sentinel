@@ -16,7 +16,7 @@ REPO_ROOT = _repo_root
 
 
 def test_benchmark_dataset_integrity() -> None:
-    """Verify benchmark_dataset_v1.json exists, contains 8 cases, and adheres to schema."""
+    """Verify benchmark_dataset_v1.json exists, contains 9 cases, and adheres to schema."""
     dataset_path = REPO_ROOT / "evaluation" / "benchmark_dataset_v1.json"
     assert dataset_path.exists(), f"Benchmark dataset missing at {dataset_path}"
 
@@ -25,15 +25,17 @@ def test_benchmark_dataset_integrity() -> None:
 
     assert data.get("version") in ("1.0", "1.0.0")
     cases = data.get("cases", [])
-    assert len(cases) == 8, f"Expected 8 benchmark cases, found {len(cases)}"
+    assert len(cases) == 9, f"Expected 9 benchmark cases, found {len(cases)}"
 
     case_ids = {c["id"] for c in cases}
-    expected_ids = {f"CASE-0{i}" for i in range(1, 9)}
+    expected_ids = {f"CASE-0{i}" for i in range(1, 10)}
     assert case_ids == expected_ids, f"Mismatch in case IDs: {case_ids} != {expected_ids}"
 
     for case in cases:
         assert "target_supplier" in case
         assert "sources" in case
+        assert "extracted_claim" in case
+        assert "baseline_evaluation" in case
         assert "expected_identity_status" in case
         assert "should_escalate" in case
         assert "expected_policy_recommendation" in case
@@ -43,14 +45,14 @@ def test_benchmark_runner_execution_and_metrics() -> None:
     """Run evaluation and assert Sentinel's deterministic guarantees over baseline."""
     results = run_evaluation()
 
-    assert results["total_cases"] == 8
+    assert results["total_cases"] == 9
     metrics = results["metrics"]
 
     # Explicit denominators
-    assert "8" in metrics["supplier_attribution_accuracy"]["denominator"]
-    assert "8" in metrics["supporting_quote_validity"]["denominator"]
+    assert "9" in metrics["supplier_attribution_accuracy"]["denominator"]
+    assert "9" in metrics["supporting_quote_validity"]["denominator"]
     assert "2" in metrics["duplicate_wire_handling"]["denominator"]
-    assert "7" in metrics["false_escalation_rate"]["denominator"]
+    assert "8" in metrics["false_escalation_rate"]["denominator"]
     assert "1" in metrics["critical_incident_recall"]["denominator"]
     assert "2" in metrics["uncertainty_handling_precision"]["denominator"]
 
