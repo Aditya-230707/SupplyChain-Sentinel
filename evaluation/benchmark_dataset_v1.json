@@ -1,0 +1,308 @@
+{
+  "version": "1.0",
+  "name": "SupplyChain Sentinel Evaluation Benchmark v1",
+  "description": "8 representative edge cases testing supplier identity, quote verification, wire syndication, null exposure safety, and policy guardrails.",
+  "cases": [
+    {
+      "id": "CASE-01",
+      "name": "Genuine Relevant Critical Disruption",
+      "target_supplier": {
+        "name": "Silicon Foundry Dresden GmbH",
+        "aliases": ["SFD", "Dresden Fab"],
+        "country": "Germany",
+        "official_domains": ["silicon-dresden.de"],
+        "parts": [
+          {
+            "part_name": "Automotive Microcontroller MCU-4",
+            "inventory_coverage_days": 14,
+            "typical_lead_time_days": 60,
+            "criticality": "high"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "url": "https://press.silicon-dresden.de/statements/cleanroom-fire",
+          "publisher": "Silicon Foundry Dresden Press",
+          "domain": "silicon-dresden.de",
+          "published_date": "2026-10-12",
+          "text": "Silicon Foundry Dresden GmbH experienced a severe cleanroom fire on Tuesday. Fab 1 cleanroom repairs and equipment recalibration are estimated to require 45 days before production resumes."
+        },
+        {
+          "url": "https://reuters.com/business/semiconductors/dresden-cleanroom-fire",
+          "publisher": "Reuters",
+          "domain": "reuters.com",
+          "published_date": "2026-10-13",
+          "text": "Reuters reports Silicon Foundry Dresden GmbH experienced a severe cleanroom fire on Tuesday. German industrial authorities are inspecting the cleanroom blaze."
+        },
+        {
+          "url": "https://techwires.de/reuters-syndicated-dresden-fire",
+          "publisher": "TechWires Germany",
+          "domain": "techwires.de",
+          "published_date": "2026-10-13",
+          "text": "According to Reuters, Silicon Foundry Dresden GmbH experienced a severe cleanroom fire on Tuesday. Semiconductor wafer deliveries face delay."
+        }
+      ],
+      "expected_identity_status": "confirmed",
+      "expected_lineage_group_count": 2,
+      "expected_independent_sources": 2,
+      "expected_disruption_days": 45,
+      "expected_inventory_gap_days": 31,
+      "expected_policy_recommendation": "urgent_human_review",
+      "should_escalate": true,
+      "notes": "Reuters and TechWires represent syndicated wire reporting. Gap = 45 - 14 = 31 days on high-criticality component triggers P-005."
+    },
+    {
+      "id": "CASE-02",
+      "name": "Genuine Incident Not Affecting Buyer Supply",
+      "target_supplier": {
+        "name": "Titan Energy Solutions",
+        "aliases": ["Titan Energy"],
+        "country": "United States",
+        "official_domains": ["titan-energy.com"],
+        "parts": [
+          {
+            "part_name": "Industrial Battery Module Pack-B",
+            "inventory_coverage_days": 30,
+            "typical_lead_time_days": 45,
+            "criticality": "medium"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "url": "https://news.titan-energy.com/press/houston-transformer",
+          "publisher": "Titan Energy Press Room",
+          "domain": "titan-energy.com",
+          "published_date": "2026-10-10",
+          "text": "Titan Energy Solutions reported a transformer explosion at its Houston substation. The substation serves commercial retail office centers. Central battery pack manufacturing facilities were unaffected."
+        }
+      ],
+      "expected_identity_status": "confirmed",
+      "expected_lineage_group_count": 1,
+      "expected_independent_sources": 1,
+      "expected_disruption_days": 0,
+      "expected_inventory_gap_days": 0,
+      "expected_policy_recommendation": "monitor",
+      "should_escalate": false,
+      "notes": "Incident occurred at regional utility substation; factory line unaffected. Escalating this is a false alarm."
+    },
+    {
+      "id": "CASE-03",
+      "name": "Similar-Name Company Entity Disambiguation",
+      "target_supplier": {
+        "name": "Vertex Components Ltd",
+        "aliases": ["Vertex UK"],
+        "country": "United Kingdom",
+        "official_domains": ["vertex-components.co.uk"],
+        "parts": [
+          {
+            "part_name": "Aerospace Titanium Fastener",
+            "inventory_coverage_days": 45,
+            "typical_lead_time_days": 90,
+            "criticality": "high"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "url": "https://aussie-cyber-brief.com.au/breaches/vertex-melbourne",
+          "publisher": "Australia Cyber Brief",
+          "domain": "aussie-cyber-brief.com.au",
+          "published_date": "2026-10-14",
+          "text": "Vertex Ltd announced an immediate suspension of assembly lines following a cyber incident. The company is based in Melbourne, Australia and manufactures retail packaging."
+        }
+      ],
+      "expected_identity_status": "mismatch",
+      "expected_lineage_group_count": 1,
+      "expected_independent_sources": 1,
+      "expected_disruption_days": null,
+      "expected_inventory_gap_days": null,
+      "expected_policy_recommendation": "insufficient_evidence",
+      "should_escalate": false,
+      "notes": "Contradictory country and business domain. Rule P-001/ID-004 must block escalation against UK target."
+    },
+    {
+      "id": "CASE-04",
+      "name": "Syndicated Wire Duplication Without Corroboration",
+      "target_supplier": {
+        "name": "Global Logistics Hub Corp",
+        "aliases": ["GLH Port"],
+        "country": "Singapore",
+        "official_domains": ["globallogistics.com"],
+        "parts": [
+          {
+            "part_name": "Maritime Freight Handling",
+            "inventory_coverage_days": 20,
+            "typical_lead_time_days": 15,
+            "criticality": "medium"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "url": "https://wire1.com/news/port-collapse",
+          "publisher": "Wire Portal 1",
+          "domain": "wire1.com",
+          "published_date": "2026-10-15",
+          "text": "Reuters reports that Global Logistics Hub Corp port terminal has been closed due to crane collapse."
+        },
+        {
+          "url": "https://wire2.net/stories/crane-port",
+          "publisher": "Wire Portal 2",
+          "domain": "wire2.net",
+          "published_date": "2026-10-15",
+          "text": "According to Reuters, Global Logistics Hub Corp port terminal has been closed due to crane collapse."
+        }
+      ],
+      "expected_identity_status": "confirmed",
+      "expected_lineage_group_count": 1,
+      "expected_independent_sources": 1,
+      "expected_disruption_days": null,
+      "expected_inventory_gap_days": null,
+      "expected_policy_recommendation": "request_supplier_confirmation",
+      "should_escalate": false,
+      "notes": "Two syndicated portals reprinting one Reuters wire. Independent sources = 1. Rule P-002 prevents urgent escalation."
+    },
+    {
+      "id": "CASE-05",
+      "name": "Conflicting Sources and Corrected Event",
+      "target_supplier": {
+        "name": "Apex Microelectronics Inc",
+        "aliases": ["Apex Semi"],
+        "country": "Taiwan",
+        "official_domains": ["apex-semi.tw"],
+        "parts": [
+          {
+            "part_name": "Power Management IC",
+            "inventory_coverage_days": 25,
+            "typical_lead_time_days": 50,
+            "criticality": "high"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "url": "https://press.apex-semi.tw/updates/false-alarm-resolution",
+          "publisher": "Apex Press Office",
+          "domain": "apex-semi.tw",
+          "published_date": "2026-10-11",
+          "text": "Apex Microelectronics Inc confirmed the chemical spill sensor alarm on Monday was a sensor drill false alarm. Zero plant evacuation occurred and all production shifts are operating normally."
+        }
+      ],
+      "expected_identity_status": "confirmed",
+      "expected_lineage_group_count": 1,
+      "expected_independent_sources": 1,
+      "expected_disruption_days": 0,
+      "expected_inventory_gap_days": 0,
+      "expected_policy_recommendation": "monitor",
+      "should_escalate": false,
+      "notes": "Official company statement confirms sensor false alarm and resolved status. Rule P-007 mandates monitor only."
+    },
+    {
+      "id": "CASE-06",
+      "name": "Unverified Social Media Allegation",
+      "target_supplier": {
+        "name": "Nordic Precision Bearings AB",
+        "aliases": ["Nordic Bearings"],
+        "country": "Sweden",
+        "official_domains": ["nordic-bearings.se"],
+        "parts": [
+          {
+            "part_name": "Ceramic Ball Bearings",
+            "inventory_coverage_days": 35,
+            "typical_lead_time_days": 70,
+            "criticality": "high"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "url": "https://rumorboard.xyz/threads/nordic-strike",
+          "publisher": "RumorBoard",
+          "domain": "rumorboard.xyz",
+          "published_date": "2026-10-15",
+          "text": "Nordic Precision Bearings AB workers might go on strike next month according to unverified chatter on anonymous forums."
+        }
+      ],
+      "expected_identity_status": "confirmed",
+      "expected_lineage_group_count": 1,
+      "expected_independent_sources": 1,
+      "expected_disruption_days": null,
+      "expected_inventory_gap_days": null,
+      "expected_policy_recommendation": "request_supplier_confirmation",
+      "should_escalate": false,
+      "notes": "Anonymous speculative allegation without official or credible media corroboration. Never escalated directly."
+    },
+    {
+      "id": "CASE-07",
+      "name": "Missing Inventory and Unknown Recovery Duration",
+      "target_supplier": {
+        "name": "Pinnacle Fasteners Ltd",
+        "aliases": ["Pinnacle UK"],
+        "country": "United Kingdom",
+        "official_domains": ["pinnacle-fasteners.co.uk"],
+        "parts": [
+          {
+            "part_name": "Custom Structural Fastener",
+            "inventory_coverage_days": null,
+            "typical_lead_time_days": null,
+            "criticality": "medium"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "url": "https://press.pinnacle-fasteners.co.uk/halt",
+          "publisher": "Pinnacle Press",
+          "domain": "pinnacle-fasteners.co.uk",
+          "published_date": "2026-10-15",
+          "text": "Pinnacle Fasteners Ltd experienced an inspection halt at plant 4."
+        }
+      ],
+      "expected_identity_status": "confirmed",
+      "expected_lineage_group_count": 1,
+      "expected_independent_sources": 1,
+      "expected_disruption_days": null,
+      "expected_inventory_gap_days": null,
+      "expected_policy_recommendation": "request_supplier_confirmation",
+      "should_escalate": false,
+      "notes": "Disruption is genuine, but duration and inventory coverage are both unknown. Gap must stay null, triggering P-004."
+    },
+    {
+      "id": "CASE-08",
+      "name": "Insufficient Evidence / Irrelevant Industry Whitepaper",
+      "target_supplier": {
+        "name": "Quantum Sensors AG",
+        "aliases": ["Quantum AG"],
+        "country": "Switzerland",
+        "official_domains": ["quantum-sensors.ch"],
+        "parts": [
+          {
+            "part_name": "Laser Gyroscope",
+            "inventory_coverage_days": 50,
+            "typical_lead_time_days": 120,
+            "criticality": "high"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "url": "https://industry-review.ch/sensor-advancements-2026",
+          "publisher": "Swiss Industry Review",
+          "domain": "industry-review.ch",
+          "published_date": "2026-10-01",
+          "text": "Quantum Sensors AG continues to research optical photonics in Zurich with no disruptions reported across European markets."
+        }
+      ],
+      "expected_identity_status": "confirmed",
+      "expected_lineage_group_count": 1,
+      "expected_independent_sources": 1,
+      "expected_disruption_days": 0,
+      "expected_inventory_gap_days": 0,
+      "expected_policy_recommendation": "monitor",
+      "should_escalate": false,
+      "notes": "Text describes research with no negative operational incident. Escalating this is an ungrounded hallucination."
+    }
+  ]
+}

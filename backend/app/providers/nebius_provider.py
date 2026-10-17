@@ -148,6 +148,8 @@ class NebiusTokenFactoryProvider:
                 return response
             except Exception as exc:
                 err_str = str(exc)
+                if self._api_key and self._api_key in err_str:
+                    err_str = err_str.replace(self._api_key, "[REDACTED_API_KEY]")
                 if "401" in err_str or "403" in err_str:
                     raise ProviderAuthError(
                         f"Nebius auth error (key redacted): {err_str[:100]}"
@@ -228,6 +230,8 @@ class NebiusTokenFactoryProvider:
                     )
         except Exception as exc:
             err_str = str(exc)
+            if self._api_key and self._api_key in err_str:
+                err_str = err_str.replace(self._api_key, "[REDACTED_API_KEY]")
             # Ensure key is not in error output
             result["error"] = "Provider unreachable: " + err_str[:150]
 
