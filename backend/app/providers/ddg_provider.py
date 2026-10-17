@@ -8,7 +8,6 @@ Handles rate limits, empty results, timeouts, and page blocking explicitly.
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -95,19 +94,23 @@ class DuckDuckGoSearchProvider:
             log.error("duckduckgo_search_failed", query=query, error=str(exc))
             raise ProviderError(f"DuckDuckGo search failed: {exc!s}") from exc
 
+        from urllib.parse import urlparse
+
         results: list[SearchResult] = []
         for it in items:
             url = it.get("url", "")
             if not url or not url.startswith("http"):
                 continue
 
+            domain = urlparse(url).netloc or None
             results.append(
                 SearchResult(
                     url=url,
                     title=it.get("title", ""),
-                    content=it.get("content", ""),
-                    score=0.85,
+                    snippet=it.get("content", ""),
+                    domain=domain,
                     published_date=it.get("published_date"),
+                    provider_score=0.85,
                     raw_content=None,
                 )
             )
@@ -117,6 +120,7 @@ class DuckDuckGoSearchProvider:
             query=query,
             results=results,
             provider_name=self.provider_name,
+            status="ok" if results else "no_results",
         )
 
     async def health_check(self) -> dict[str, object]:
@@ -155,79 +159,122 @@ class DuckDuckGoContentProvider:
     def __init__(self, timeout: float = 12.0) -> None:
         self._timeout = timeout
 
-    async def fetch_content(self, url: str) -> ContentResult:
+    @staticmethod
+    def _is_safe_url(url: str) -> bool:
+        """SSRF protection: block loopback, private networks, and invalid schemes."""
+        from urllib.parse import urlparse
+
+        try:
+            parsed = urlparse(url)
+            if parsed.scheme not in ("http", "https"):
+                return False
+            host = (parsed.hostname or "").lower()
+            if not host:
+                return False
+            if host in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):  # noqa: S104
+                return False
+            if host.endswith(".local") or host.endswith(".internal"):
+                return False
+            # Block private IP ranges
+            import ipaddress
+
+            try:
+                ip = ipaddress.ip_address(host)
+                if ip.is_private or ip.is_loopback or ip.is_link_local:
+                    return False
+            except ValueError:
+                pass  # It's a hostname, not an IP literal
+            return True
+        except Exception:
+            return False
+
+    async def fetch_one(self, client: httpx.AsyncClient, url: str) -> ContentResult:
         """Fetch and extract visible text from public URL."""
+        if not self._is_safe_url(url):
+            log.warning("ssrf_blocked_url", url=url)
+            return ContentResult(
+                url=url,
+                status="inaccessible",
+                text=None,
+                title=None,
+                error_message="Blocked: private or invalid URL destination",
+            )
+
         headers = {
             "User-Agent": USER_AGENT,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.9",
         }
 
-        retrieved_at = datetime.now(UTC)
-
         try:
-            async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=True) as client:
-                resp = await client.get(url, headers=headers)
+            resp = await client.get(url, headers=headers)
 
-                if resp.status_code >= 400:
-                    log.warning(
-                        "public_page_blocked_or_missing",
-                        url=url,
-                        status_code=resp.status_code,
-                    )
-                    return ContentResult(
-                        url=url,
-                        content=f"[Access Restricted: HTTP {resp.status_code}]",
-                        title=None,
-                        published_date=None,
-                        retrieved_at=retrieved_at,
-                        content_type="text/plain",
-                        provider_name=self.provider_name,
-                        raw_bytes_length=0,
-                    )
-
-                html_text = resp.text
-                soup = BeautifulSoup(html_text, "html.parser")
-
-                # Remove non-content tags
-                for tag in soup(["script", "style", "nav", "header", "footer", "noscript", "svg"]):
-                    tag.decompose()
-
-                title = soup.title.string.strip() if soup.title and soup.title.string else None
-
-                # Extract article body or main content
-                article = soup.find("article") or soup.find("main") or soup.body
-                if article:
-                    clean_text = " ".join(article.stripped_strings)
-                else:
-                    clean_text = " ".join(soup.stripped_strings)
-
-                # Cap content length
-                clean_text = clean_text[:15_000]
-
+            if resp.status_code >= 400:
+                log.warning(
+                    "public_page_blocked_or_missing",
+                    url=url,
+                    status_code=resp.status_code,
+                )
                 return ContentResult(
                     url=url,
-                    content=clean_text or "[Empty Page Content]",
-                    title=title,
-                    published_date=None,
-                    retrieved_at=retrieved_at,
-                    content_type="text/html",
-                    provider_name=self.provider_name,
-                    raw_bytes_length=len(html_text.encode("utf-8")),
+                    status="inaccessible",
+                    text=None,
+                    title=None,
+                    error_message=f"HTTP {resp.status_code}",
                 )
+
+            html_text = resp.text
+            soup = BeautifulSoup(html_text, "html.parser")
+
+            # Remove non-content tags
+            for tag in soup(["script", "style", "nav", "header", "footer", "noscript", "svg"]):
+                tag.decompose()
+
+            title = soup.title.string.strip() if soup.title and soup.title.string else None
+
+            # Extract article body or main content
+            article = soup.find("article") or soup.find("main") or soup.body
+            if article:
+                clean_text = " ".join(article.stripped_strings)
+            else:
+                clean_text = " ".join(soup.stripped_strings)
+
+            # Cap content length
+            clean_text = clean_text[:15_000]
+
+            return ContentResult(
+                url=url,
+                status="available" if clean_text else "snippet_only",
+                text=clean_text or None,
+                title=title,
+            )
 
         except Exception as exc:
             log.warning("public_page_fetch_failed", url=url, error=str(exc))
             return ContentResult(
                 url=url,
-                content=f"[Retrieval Failure: {exc!s}]",
+                status="extraction_failed",
+                text=None,
                 title=None,
-                published_date=None,
-                retrieved_at=retrieved_at,
-                content_type="text/plain",
-                provider_name=self.provider_name,
-                raw_bytes_length=0,
+                error_message=str(exc)[:200],
             )
+
+    async def extract(self, urls: list[str]) -> list[ContentResult]:
+        """Extract full text content for a list of URLs."""
+        if not urls:
+            return []
+
+        async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=True) as client:
+            tasks = [self.fetch_one(client, u) for u in urls]
+            return await asyncio.gather(*tasks)
+
+    async def health_check(self) -> dict[str, object]:
+        return {
+            "configured": True,
+            "provider_name": self.provider_name,
+            "reachable": True,
+            "error": None,
+        }
 
 
 def make_ddg_providers() -> tuple[DuckDuckGoSearchProvider, DuckDuckGoContentProvider]:

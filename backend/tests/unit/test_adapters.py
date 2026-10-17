@@ -196,3 +196,56 @@ async def test_ollama_health_check_flags_missing_model() -> None:
     assert health["reachable"] is True
     assert health["model_available"] is False
     assert "not found" in str(health["error"])
+
+
+# ---- DuckDuckGo Adapters ------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_ddg_search_mapping() -> None:
+    from app.providers.ddg_provider import DuckDuckGoSearchProvider
+
+    provider = DuckDuckGoSearchProvider(max_results=2)
+
+    fake_items = [
+        {
+            "url": "https://reuters.com/business/factory-disruption",
+            "title": "Factory disruption reported",
+            "content": "A fire broke out in the manufacturing wing.",
+            "published_date": "2026-10-15",
+            "publisher": "Reuters",
+        }
+    ]
+
+    with patch.object(provider, "_max_results", 2):
+        with patch("asyncio.BaseEventLoop.run_in_executor", new_callable=AsyncMock) as mock_exec:
+            mock_exec.return_value = fake_items
+            resp = await provider.search("Apex factory fire")
+
+    assert resp.status == "ok"
+    assert len(resp.results) == 1
+    item = resp.results[0]
+    assert item.url == "https://reuters.com/business/factory-disruption"
+    assert item.domain == "reuters.com"
+    assert item.title == "Factory disruption reported"
+    assert item.snippet == "A fire broke out in the manufacturing wing."
+
+
+@pytest.mark.asyncio
+async def test_ddg_content_ssrf_blocking() -> None:
+    from app.providers.ddg_provider import DuckDuckGoContentProvider
+
+    provider = DuckDuckGoContentProvider()
+
+    # Blocked URLs (localhost, private IP, invalid scheme)
+    results = await provider.extract([
+        "http://localhost:8000/internal",
+        "http://192.168.1.1/admin",
+        "ftp://example.com/file",
+    ])
+
+    assert len(results) == 3
+    for r in results:
+        assert r.status == "inaccessible"
+        assert "private or invalid" in (r.error_message or "")
+
