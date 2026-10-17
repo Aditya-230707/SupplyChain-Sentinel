@@ -253,22 +253,32 @@ export default function App() {
       {/* Header */}
       <header className="app-header">
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
             🛡️ SupplyChain Sentinel
           </h1>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '0.2rem' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
             Evidence-First Supplier Incident Intelligence & Deterministic Policy Gate
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
           <span className={`pill ${health?.status === 'ok' ? 'pill-success' : 'pill-danger'}`}>
-            API {health?.status === 'ok' ? 'Online' : 'Degraded'}
+            <span
+              style={{
+                display: 'inline-block',
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: health?.status === 'ok' ? 'var(--accent)' : 'var(--error)',
+                boxShadow: health?.status === 'ok' ? '0 0 6px var(--accent)' : 'none',
+              }}
+            />
+            API {health?.status === 'ok' ? 'ONLINE' : 'DEGRADED'}
           </span>
           <span className="pill pill-info">
-            Model: {providersHealth?.llm?.model_id || 'qwen3.5:9b'}
+            MODEL: {providersHealth?.llm?.model_id || 'qwen3.5:9b'}
           </span>
           <span className={`pill ${isLiveSearchAvailable ? 'pill-success' : 'pill-neutral'}`}>
-            Live Tavily: {isLiveSearchAvailable ? 'Ready' : 'Not Configured'}
+            LIVE TAVILY: {isLiveSearchAvailable ? 'READY' : 'NOT CONFIGURED'}
           </span>
         </div>
       </header>
@@ -356,7 +366,7 @@ export default function App() {
               <span className="pill pill-neutral">Explicit Control</span>
             </div>
             <div className="card-body" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}>
                 <input
                   type="radio"
                   name="searchMode"
@@ -365,8 +375,8 @@ export default function App() {
                   onChange={() => setSearchMode('fixture')}
                 />
                 <div>
-                  <strong>Simulated Fixture Mode (Recommended for Demos)</strong>
-                  <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>Simulated Fixture Mode (Recommended for Demos)</strong>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                     Deterministic, reproducible scenarios. Zero network latency or external API keys needed.
                   </div>
                 </div>
@@ -376,7 +386,7 @@ export default function App() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
+                  gap: '0.6rem',
                   cursor: isLiveSearchAvailable ? 'pointer' : 'not-allowed',
                   opacity: isLiveSearchAvailable ? 1 : 0.6,
                 }}
@@ -390,8 +400,8 @@ export default function App() {
                   disabled={!isLiveSearchAvailable}
                 />
                 <div>
-                  <strong>Live Web Search (Tavily)</strong>
-                  <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                  <strong style={{ color: 'var(--text-primary)' }}>Live Web Search (Tavily)</strong>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                     {isLiveSearchAvailable
                       ? 'Queries real web indices. Never silently falls back if an error occurs.'
                       : 'Requires TAVILY_API_KEY in backend .env to enable.'}
@@ -402,11 +412,11 @@ export default function App() {
           </div>
 
           {/* 1-Click Pre-packaged Demo Scenarios */}
-          <div style={{ marginBottom: '1rem' }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.35rem' }}>
+          <div style={{ marginBottom: '1.25rem' }}>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.35rem', color: 'var(--text-primary)' }}>
               🚀 Quick-Launch Demonstration Scenarios
             </h2>
-            <p style={{ color: '#64748b', fontSize: '0.88rem', marginBottom: '1rem' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
               Select a scenario to instantly instantiate the supplier profile and execute an investigation.
             </p>
 
@@ -414,16 +424,16 @@ export default function App() {
               {DEMO_SCENARIOS.map((sc) => (
                 <div key={sc.key} className="card" style={{ display: 'flex', flexDirection: 'column' }}>
                   <div className="card-header">
-                    <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{sc.title}</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>{sc.title}</span>
                     <span className={`pill ${sc.badgeClass}`}>{sc.badge}</span>
                   </div>
                   <div className="card-body" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '0.75rem', flex: 1 }}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.85rem', flex: 1 }}>
                       {sc.summary}
                     </p>
-                    <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
                       <div>🏢 <strong>{sc.supplierName}</strong> ({sc.country})</div>
-                      <div>📦 Part: {sc.partName} ({sc.coverage}d stock)</div>
+                      <div>📦 Part: <code>{sc.partName}</code> ({sc.coverage}d stock)</div>
                     </div>
                     <button
                       className="btn btn-primary"
@@ -458,9 +468,9 @@ export default function App() {
                   {suppliersData?.items.map((sup) => (
                     <tr key={sup.id}>
                       <td>
-                        <strong>{sup.name}</strong>
+                        <strong style={{ color: 'var(--text-primary)' }}>{sup.name}</strong>
                         {sup.aliases.length > 0 && (
-                          <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                             Aliases: {sup.aliases.join(', ')}
                           </div>
                         )}
@@ -495,7 +505,7 @@ export default function App() {
                   ))}
                   {(!suppliersData || suppliersData.items.length === 0) && (
                     <tr>
-                      <td colSpan={4} style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b' }}>
+                      <td colSpan={4} style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>
                         No suppliers registered yet. Click one of the demo scenarios above to begin.
                       </td>
                     </tr>
@@ -514,8 +524,8 @@ export default function App() {
         <div>
           {!activeRunId ? (
             <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-              <h3>No Active Investigation</h3>
-              <p style={{ color: '#64748b', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ color: 'var(--text-primary)' }}>No Active Investigation</h3>
+              <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
                 Please select or launch a scenario from the Intake tab.
               </p>
               <button className="btn btn-primary" onClick={() => setActiveTab('intake')}>
@@ -529,8 +539,8 @@ export default function App() {
                 <div className="card-header">
                   <div>
                     <span className="card-title">Investigation Run: {run?.id}</span>
-                    <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.2rem' }}>
-                      Supplier: <strong>{selectedSupplier?.name || run?.supplier_id}</strong> | Pipeline v{run?.pipeline_version}
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                      Supplier: <strong style={{ color: 'var(--text-primary)' }}>{selectedSupplier?.name || run?.supplier_id}</strong> | Pipeline v{run?.pipeline_version}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -552,28 +562,28 @@ export default function App() {
                 </div>
 
                 <div className="card-body">
-                  {isRunLoading && <p style={{ color: '#64748b' }}>Executing multi-stage investigation pipeline…</p>}
+                  {isRunLoading && <p style={{ color: 'var(--text-muted)' }}>Executing multi-stage investigation pipeline…</p>}
 
                   {/* Incident Candidate Findings */}
                   {activeIncident && (
                     <div>
                       <div className="grid-2">
                         {/* 1. Incident & Entity Details */}
-                        <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '1rem' }}>
-                          <h4 style={{ marginBottom: '0.75rem', color: '#0f172a' }}>
+                        <div style={{ border: '1px solid var(--border)', background: 'var(--surface-elevated)', borderRadius: 'var(--radius-md)', padding: '1.1rem' }}>
+                          <h4 style={{ marginBottom: '0.75rem', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
                             📌 Incident Candidate & Identity
                           </h4>
-                          <div style={{ fontSize: '0.9rem', lineHeight: 1.8 }}>
+                          <div style={{ fontSize: '0.88rem', lineHeight: 1.8 }}>
                             <div>
-                              <strong>Disruption Category:</strong>{' '}
+                              <strong style={{ color: 'var(--text-secondary)' }}>Disruption Category:</strong>{' '}
                               <code>{activeIncident.event_type || 'operational_disruption'}</code>
                             </div>
                             <div>
-                              <strong>Facility / Location:</strong>{' '}
-                              {activeIncident.facility_location || 'Not specified'}
+                              <strong style={{ color: 'var(--text-secondary)' }}>Facility / Location:</strong>{' '}
+                              <span style={{ color: 'var(--text-primary)' }}>{activeIncident.facility_location || 'Not specified'}</span>
                             </div>
                             <div>
-                              <strong>Entity Resolution Status (Rules ID-001–005):</strong>{' '}
+                              <strong style={{ color: 'var(--text-secondary)' }}>Entity Resolution Status (Rules ID-001–005):</strong>{' '}
                               <span
                                 className={`pill ${
                                   activeIncident.entity_match_status === 'confirmed'
@@ -589,22 +599,24 @@ export default function App() {
                               </span>
                             </div>
                             <div>
-                              <strong>Lineage Corroboration:</strong>{' '}
-                              {activeIncident.independent_support_count !== null
-                                ? `${activeIncident.independent_support_count} independent reporting groups`
-                                : `${sources.length} sources (syndicated wire deduplication active)`}
+                              <strong style={{ color: 'var(--text-secondary)' }}>Lineage Corroboration:</strong>{' '}
+                              <span style={{ color: 'var(--text-primary)' }}>
+                                {activeIncident.independent_support_count !== null
+                                  ? `${activeIncident.independent_support_count} independent reporting groups`
+                                  : `${sources.length} sources (syndicated wire deduplication active)`}
+                              </span>
                             </div>
                           </div>
                         </div>
 
                         {/* 2. Operational Exposure Calculation */}
-                        <div style={{ border: '1px solid #e2e8f0', borderRadius: '6px', padding: '1rem' }}>
-                          <h4 style={{ marginBottom: '0.75rem', color: '#0f172a' }}>
+                        <div style={{ border: '1px solid var(--border)', background: 'var(--surface-elevated)', borderRadius: 'var(--radius-md)', padding: '1.1rem' }}>
+                          <h4 style={{ marginBottom: '0.75rem', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
                             📊 Deterministic Exposure (Formula EX-003)
                           </h4>
-                          <div style={{ fontSize: '0.9rem', lineHeight: 1.8 }}>
+                          <div style={{ fontSize: '0.88rem', lineHeight: 1.8 }}>
                             <div>
-                              <strong>Calculation Formula:</strong>{' '}
+                              <strong style={{ color: 'var(--text-secondary)' }}>Calculation Formula:</strong>{' '}
                               <code>Gap = max(0, Disruption - Coverage)</code>
                             </div>
                             {(() => {
@@ -616,21 +628,25 @@ export default function App() {
                               return (
                                 <>
                                   <div>
-                                    <strong>Disruption Duration:</strong>{' '}
-                                    {dur !== undefined && dur !== null
-                                      ? `${String(dur)} days`
-                                      : 'UNKNOWN (never assumed zero)'}
+                                    <strong style={{ color: 'var(--text-secondary)' }}>Disruption Duration:</strong>{' '}
+                                    <span style={{ color: 'var(--text-primary)' }}>
+                                      {dur !== undefined && dur !== null
+                                        ? `${String(dur)} days`
+                                        : 'UNKNOWN (never assumed zero)'}
+                                    </span>
                                   </div>
                                   <div>
-                                    <strong>Inventory Coverage:</strong>{' '}
-                                    {cov !== undefined && cov !== null ? `${String(cov)} days` : 'UNKNOWN'}
+                                    <strong style={{ color: 'var(--text-secondary)' }}>Inventory Coverage:</strong>{' '}
+                                    <span style={{ color: 'var(--text-primary)' }}>
+                                      {cov !== undefined && cov !== null ? `${String(cov)} days` : 'UNKNOWN'}
+                                    </span>
                                   </div>
                                 </>
                               )
                             })()}
                             <div>
-                              <strong>Calculated Operational Gap:</strong>{' '}
-                              <strong style={{ fontSize: '1.05rem', color: '#dc2626' }}>
+                              <strong style={{ color: 'var(--text-secondary)' }}>Calculated Operational Gap:</strong>{' '}
+                              <strong style={{ fontSize: '1.05rem', color: 'var(--error)' }}>
                                 {activeIncident.exposure?.potential_inventory_gap_days !== null &&
                                 activeIncident.exposure?.potential_inventory_gap_days !== undefined
                                   ? `${activeIncident.exposure.potential_inventory_gap_days} DAYS`
@@ -646,17 +662,17 @@ export default function App() {
                         style={{
                           marginTop: '1.25rem',
                           padding: '1.25rem',
-                          background: '#f8fafc',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: '6px',
+                          background: 'var(--surface-elevated)',
+                          border: '1px solid var(--border-strong)',
+                          borderRadius: 'var(--radius-md)',
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div>
-                            <span style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase' }}>
+                            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                               Deterministic Policy Rulebook Evaluation
                             </span>
-                            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginTop: '0.2rem' }}>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: '0.2rem', color: 'var(--text-primary)' }}>
                               Recommendation:{' '}
                               <span
                                 className={`pill ${
@@ -666,7 +682,7 @@ export default function App() {
                                     ? 'pill-warning'
                                     : 'pill-info'
                                 }`}
-                                style={{ fontSize: '0.9rem', padding: '0.3rem 0.8rem' }}
+                                style={{ fontSize: '0.88rem', padding: '0.3rem 0.8rem' }}
                               >
                                 {activeIncident.policy_decision?.recommendation.replace(/_/g, ' ').toUpperCase()}
                               </span>
@@ -682,7 +698,7 @@ export default function App() {
                         {/* Rules fired and blockers */}
                         <div style={{ marginTop: '0.85rem', fontSize: '0.88rem' }}>
                           <div>
-                            <strong>Rules Fired:</strong>{' '}
+                            <strong style={{ color: 'var(--text-secondary)' }}>Rules Fired:</strong>{' '}
                             {activeIncident.policy_decision?.rule_ids_fired.map((r) => (
                               <code key={r} style={{ marginRight: '0.4rem' }}>
                                 {r}
@@ -691,8 +707,8 @@ export default function App() {
                           </div>
                           {activeIncident.policy_decision?.reasons && activeIncident.policy_decision.reasons.length > 0 && (
                             <div style={{ marginTop: '0.4rem' }}>
-                              <strong>Evaluation Reasons:</strong>
-                              <ul style={{ paddingLeft: '1.2rem', marginTop: '0.2rem', color: '#475569' }}>
+                              <strong style={{ color: 'var(--text-secondary)' }}>Evaluation Reasons:</strong>
+                              <ul style={{ paddingLeft: '1.2rem', marginTop: '0.2rem', color: 'var(--text-secondary)' }}>
                                 {activeIncident.policy_decision.reasons.map((rs, i) => (
                                   <li key={i}>{rs}</li>
                                 ))}
@@ -700,7 +716,7 @@ export default function App() {
                             </div>
                           )}
                           {activeIncident.policy_decision?.blockers && activeIncident.policy_decision.blockers.length > 0 && (
-                            <div style={{ marginTop: '0.4rem', color: '#b45309' }}>
+                            <div style={{ marginTop: '0.4rem', color: 'var(--warning)' }}>
                               <strong>Active Blockers:</strong>
                               <ul style={{ paddingLeft: '1.2rem', marginTop: '0.2rem' }}>
                                 {activeIncident.policy_decision.blockers.map((b, i) => (
@@ -715,7 +731,7 @@ export default function App() {
                   )}
 
                   {!activeIncident && !isRunLoading && (
-                    <p style={{ color: '#64748b', textAlign: 'center', padding: '2rem' }}>
+                    <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
                       No incident candidates generated for this investigation run.
                     </p>
                   )}
@@ -737,13 +753,13 @@ export default function App() {
               <span className="pill pill-neutral">Rule E-005 Verification</span>
             </div>
             <div className="card-body">
-              <p style={{ fontSize: '0.88rem', color: '#64748b', marginBottom: '1.25rem' }}>
+              <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
                 All LLM outputs are treated as untrusted claims until supporting quotes are mathematically verified as
                 exact substrings within stored source documents.
               </p>
 
               {claims.length === 0 ? (
-                <p style={{ color: '#64748b', textAlign: 'center', padding: '2rem' }}>
+                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>
                   No claims available. Please launch an investigation first.
                 </p>
               ) : (
@@ -756,18 +772,18 @@ export default function App() {
                       <div
                         key={claim.id}
                         style={{
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
+                          border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius-md)',
                           padding: '1.25rem',
-                          background: '#ffffff',
+                          background: 'var(--surface-elevated)',
                         }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
-                            <span style={{ fontWeight: 700, fontSize: '1rem', color: '#0f172a' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.98rem', color: 'var(--text-primary)' }}>
                               {claim.subject_text}
                             </span>
-                            <div style={{ fontSize: '0.85rem', color: '#475569', marginTop: '0.2rem' }}>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                               <strong>Claimed Disruption:</strong> {claim.object_text}
                             </div>
                           </div>
@@ -780,7 +796,7 @@ export default function App() {
 
                         {/* Exact Supporting Quotation */}
                         <div style={{ marginTop: '0.75rem' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#475569', textTransform: 'uppercase' }}>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                             Literal Supporting Quotation:
                           </span>
                           <div className={`quote-box ${isVerified ? 'quote-verified' : 'quote-mismatch'}`}>
@@ -793,14 +809,15 @@ export default function App() {
                           <div
                             style={{
                               marginTop: '0.75rem',
-                              padding: '0.75rem',
-                              background: '#f8fafc',
-                              borderRadius: '6px',
+                              padding: '0.75rem 1rem',
+                              background: 'var(--surface)',
+                              border: '1px solid var(--border)',
+                              borderRadius: 'var(--radius-sm)',
                               fontSize: '0.82rem',
-                              color: '#475569',
+                              color: 'var(--text-secondary)',
                             }}
                           >
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
                               <div>
                                 <strong>Publisher:</strong> {sourceDoc.publisher_name || sourceDoc.domain} |{' '}
                                 <strong>Published:</strong> {sourceDoc.published_at ? new Date(sourceDoc.published_at).toLocaleDateString() : 'Unknown date'}
@@ -812,7 +829,7 @@ export default function App() {
                               </div>
                             </div>
                             {sourceDoc.license_or_usage_notes && (
-                              <div style={{ marginTop: '0.3rem', color: '#64748b' }}>
+                              <div style={{ marginTop: '0.3rem', color: 'var(--text-muted)' }}>
                                 <em>{sourceDoc.license_or_usage_notes}</em>
                               </div>
                             )}
@@ -834,7 +851,7 @@ export default function App() {
                 <span className="pill pill-info">{relations.length} Relations Detected</span>
               </div>
               <div className="card-body">
-                <p style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.75rem' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
                   Multiple web reports originating from the same wire service (e.g. Reuters) are clustered to prevent
                   false double-counting of corroborating evidence.
                 </p>
@@ -855,7 +872,7 @@ export default function App() {
                         <td>
                           <span className="pill pill-warning">{rel.relation}</span>
                         </td>
-                        <td>
+                        <td style={{ color: 'var(--text-secondary)' }}>
                           {String(
                             (rel.evidence as Record<string, unknown>)?.observation ||
                               'Content match indicates common origin or wire syndication.'
@@ -878,8 +895,8 @@ export default function App() {
         <div>
           {!activeIncident ? (
             <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-              <h3>No Incident Available for Review</h3>
-              <p style={{ color: '#64748b', marginTop: '0.5rem' }}>
+              <h3 style={{ color: 'var(--text-primary)' }}>No Incident Available for Review</h3>
+              <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                 Please run an investigation to generate a policy recommendation.
               </p>
             </div>
@@ -900,18 +917,20 @@ export default function App() {
                 <div className="card-body">
                   <div
                     style={{
-                      padding: '1rem',
-                      background: '#f8fafc',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '6px',
+                      padding: '1.1rem',
+                      background: 'var(--surface-elevated)',
+                      border: '1px solid var(--border-strong)',
+                      borderRadius: 'var(--radius-md)',
                       marginBottom: '1.25rem',
                     }}
                   >
-                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>AUTOMATED POLICY RECOMMENDATION</div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: '0.3rem 0' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      AUTOMATED POLICY RECOMMENDATION
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.3rem 0' }}>
                       {activeIncident.policy_decision?.recommendation.replace(/_/g, ' ').toUpperCase()}
                     </div>
-                    <div style={{ fontSize: '0.88rem', color: '#475569' }}>
+                    <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
                       {activeIncident.policy_decision?.reasons?.join(' ') ||
                         'Evidence and exposure thresholds evaluated deterministically.'}
                     </div>
@@ -926,8 +945,8 @@ export default function App() {
                   >
                     <div className="form-group">
                       <label className="form-label">Reviewer Action Disposition:</label>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}>
                           <input
                             type="radio"
                             name="decisionAction"
@@ -936,14 +955,14 @@ export default function App() {
                             onChange={() => setDecisionAction('approve_recommendation')}
                           />
                           <div>
-                            <strong>Accept & Approve Automated Recommendation</strong>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                            <strong style={{ color: 'var(--text-primary)' }}>Accept & Approve Automated Recommendation</strong>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                               Accept policy outcome without altering the recommended course of action.
                             </div>
                           </div>
                         </label>
 
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}>
                           <input
                             type="radio"
                             name="decisionAction"
@@ -952,14 +971,14 @@ export default function App() {
                             onChange={() => setDecisionAction('request_more_information')}
                           />
                           <div>
-                            <strong>Request Formal Supplier Confirmation</strong>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                            <strong style={{ color: 'var(--text-primary)' }}>Request Formal Supplier Confirmation</strong>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                               Send formal inquiry to supplier account manager before enacting procurement changes.
                             </div>
                           </div>
                         </label>
 
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}>
                           <input
                             type="radio"
                             name="decisionAction"
@@ -968,14 +987,14 @@ export default function App() {
                             onChange={() => setDecisionAction('mark_monitor_only')}
                           />
                           <div>
-                            <strong>Mark as Monitor Only</strong>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                            <strong style={{ color: 'var(--text-primary)' }}>Mark as Monitor Only</strong>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                               De-escalate to ongoing monitoring (e.g. if recovery plan is already confirmed).
                             </div>
                           </div>
                         </label>
 
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}>
                           <input
                             type="radio"
                             name="decisionAction"
@@ -984,8 +1003,8 @@ export default function App() {
                             onChange={() => setDecisionAction('reject_recommendation')}
                           />
                           <div>
-                            <strong>Reject / Override Recommendation</strong>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                            <strong style={{ color: 'var(--text-primary)' }}>Reject / Override Recommendation</strong>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                               Requires explicit justification note explaining the human override.
                             </div>
                           </div>
@@ -1028,7 +1047,7 @@ export default function App() {
                       <label className="form-label">
                         Reviewer Rationale & Justification Notes{' '}
                         {decisionAction === 'reject_recommendation' && (
-                          <span style={{ color: '#dc2626' }}>*(Required for Override)*</span>
+                          <span style={{ color: 'var(--error)' }}>*(Required for Override)*</span>
                         )}
                       </label>
                       <textarea
@@ -1068,7 +1087,7 @@ export default function App() {
                 </div>
                 <div className="card-body">
                   {reviews.length === 0 ? (
-                    <p style={{ color: '#64748b', textAlign: 'center', padding: '1rem' }}>
+                    <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>
                       No prior human reviews recorded for this incident.
                     </p>
                   ) : (
@@ -1077,22 +1096,22 @@ export default function App() {
                         <div
                           key={rev.id}
                           style={{
-                            padding: '0.85rem 1rem',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '6px',
-                            background: '#f8fafc',
+                            padding: '0.85rem 1.1rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius-sm)',
+                            background: 'var(--surface-elevated)',
                           }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div>
-                              <strong>{rev.reviewer_name || 'Procurement Reviewer'}</strong>{' '}
-                              <span style={{ color: '#64748b', fontSize: '0.8rem' }}>
+                              <strong style={{ color: 'var(--text-primary)' }}>{rev.reviewer_name || 'Procurement Reviewer'}</strong>{' '}
+                              <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                                 on {new Date(rev.reviewed_at).toLocaleString()}
                               </span>
                             </div>
                             <span className="pill pill-success">{rev.action.replace(/_/g, ' ')}</span>
                           </div>
-                          <div style={{ fontSize: '0.85rem', color: '#475569', marginTop: '0.4rem' }}>
+                          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
                             <div>
                               Prior automated recommendation:{' '}
                               <code>{rev.prior_recommendation || 'None'}</code>
@@ -1101,7 +1120,7 @@ export default function App() {
                               )}
                             </div>
                             {rev.reviewer_note && (
-                              <div style={{ marginTop: '0.3rem', fontStyle: 'italic' }}>
+                              <div style={{ marginTop: '0.3rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>
                                 Note: "{rev.reviewer_note}"
                               </div>
                             )}
@@ -1139,13 +1158,13 @@ export default function App() {
               <tbody>
                 {auditEvents.map((evt) => (
                   <tr key={evt.id}>
-                    <td style={{ whiteSpace: 'nowrap', fontSize: '0.82rem', color: '#64748b' }}>
+                    <td style={{ whiteSpace: 'nowrap', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                       {new Date(evt.created_at).toLocaleString()}
                     </td>
                     <td>
                       <span className="pill pill-info">{evt.event_type}</span>
                     </td>
-                    <td>{evt.entity_type || 'system'}</td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{evt.entity_type || 'system'}</td>
                     <td>
                       <code style={{ fontSize: '0.78rem' }}>
                         {JSON.stringify(evt.data).slice(0, 120)}
@@ -1156,7 +1175,7 @@ export default function App() {
                 ))}
                 {auditEvents.length === 0 && (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                    <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                       No audit events logged yet.
                     </td>
                   </tr>
