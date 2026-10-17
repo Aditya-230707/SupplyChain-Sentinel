@@ -8,6 +8,7 @@
 .env.*.local
 *.secret
 secrets/
+scratch/
 
 # ---- Python ------------------------------------------------
 __pycache__/
