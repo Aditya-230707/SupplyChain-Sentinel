@@ -25,7 +25,7 @@ import {
 const DEMO_SCENARIOS = [
   {
     key: 'dresden',
-    title: '🟢 Scenario A: Genuine Critical Disruption',
+    title: 'Scenario A: Genuine Critical Disruption',
     badge: 'Urgent Review Expected',
     badgeClass: 'pill-danger',
     supplierName: 'Silicon Foundry Dresden GmbH',
@@ -40,7 +40,7 @@ const DEMO_SCENARIOS = [
   },
   {
     key: 'titan',
-    title: '🟡 Scenario B: True but Irrelevant Incident',
+    title: 'Scenario B: True but Irrelevant Incident',
     badge: 'Contingency / Monitor',
     badgeClass: 'pill-warning',
     supplierName: 'Titan Energy Solutions',
@@ -55,7 +55,7 @@ const DEMO_SCENARIOS = [
   },
   {
     key: 'vertex',
-    title: '🔴 Scenario C: Similar Name / Misleading Attribution',
+    title: 'Scenario C: Similar Name / Misleading Attribution',
     badge: 'Identity Blocker Expected',
     badgeClass: 'pill-neutral',
     supplierName: 'Vertex Components Ltd',
@@ -254,7 +254,7 @@ export default function App() {
       <header className="app-header">
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            🛡️ SupplyChain Sentinel
+            SupplyChain Sentinel
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
             Evidence-First Supplier Incident Intelligence & Deterministic Policy Gate
@@ -287,14 +287,14 @@ export default function App() {
       {searchMode === 'fixture' ? (
         <div className="banner-fixture">
           <div>
-            <strong>⚡ ACTIVE SEARCH MODE: SIMULATED FIXTURE (Default)</strong> — Retrieved evidence is sourced from
+            <strong>ACTIVE SEARCH MODE: SIMULATED FIXTURE (Default)</strong> — Retrieved evidence is sourced from
             deterministic fixtures designed for reproducible evaluation.
           </div>
           <span className="pill pill-info">Simulated Evidence</span>
         </div>
       ) : (
         <div className="banner-warning">
-          <strong>🌐 ACTIVE SEARCH MODE: LIVE TAVILY SEARCH</strong> — Performing live web retrieval. External API
+          <strong>ACTIVE SEARCH MODE: LIVE TAVILY SEARCH</strong> — Performing live web retrieval. External API
           failures will be reported explicitly without silent fallback.
         </div>
       )}
@@ -305,31 +305,31 @@ export default function App() {
           className={`tab-btn ${activeTab === 'intake' ? 'active' : ''}`}
           onClick={() => setActiveTab('intake')}
         >
-          🏢 1. Intake & Scenarios
+          1. Intake & Scenarios
         </button>
         <button
           className={`tab-btn ${activeTab === 'workspace' ? 'active' : ''}`}
           onClick={() => setActiveTab('workspace')}
         >
-          🔍 2. Investigation Workspace {activeRunId && <span className="pill pill-info">Active</span>}
+          2. Investigation Workspace {activeRunId && <span className="pill pill-info">Active</span>}
         </button>
         <button
           className={`tab-btn ${activeTab === 'evidence' ? 'active' : ''}`}
           onClick={() => setActiveTab('evidence')}
         >
-          📜 3. Evidence & Quote Inspector ({claims.length})
+          3. Evidence & Quote Inspector ({claims.length})
         </button>
         <button
           className={`tab-btn ${activeTab === 'decision' ? 'active' : ''}`}
           onClick={() => setActiveTab('decision')}
         >
-          ⚖️ 4. Human Decision Gate {activeIncident?.review_required && <span className="pill pill-danger">Review Req.</span>}
+          4. Human Decision Gate {activeIncident?.review_required && <span className="pill pill-danger">Review Req.</span>}
         </button>
         <button
           className={`tab-btn ${activeTab === 'audit' ? 'active' : ''}`}
           onClick={() => setActiveTab('audit')}
         >
-          📋 5. Audit Trail
+          5. Audit Trail
         </button>
       </nav>
 
@@ -362,7 +362,7 @@ export default function App() {
           {/* Search Mode Selection Card */}
           <div className="card" style={{ marginBottom: '1.5rem' }}>
             <div className="card-header">
-              <span className="card-title">⚙️ Investigation Search Mode</span>
+              <span className="card-title">Investigation Search Mode</span>
               <span className="pill pill-neutral">Explicit Control</span>
             </div>
             <div className="card-body" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
@@ -414,7 +414,7 @@ export default function App() {
           {/* 1-Click Pre-packaged Demo Scenarios */}
           <div style={{ marginBottom: '1.25rem' }}>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.35rem', color: 'var(--text-primary)' }}>
-              🚀 Quick-Launch Demonstration Scenarios
+              Quick-Launch Demonstration Scenarios
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
               Select a scenario to instantly instantiate the supplier profile and execute an investigation.
@@ -432,8 +432,8 @@ export default function App() {
                       {sc.summary}
                     </p>
                     <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                      <div>🏢 <strong>{sc.supplierName}</strong> ({sc.country})</div>
-                      <div>📦 Part: <code>{sc.partName}</code> ({sc.coverage}d stock)</div>
+                      <div>Supplier: <strong>{sc.supplierName}</strong> ({sc.country})</div>
+                      <div>Part: <code>{sc.partName}</code> ({sc.coverage}d stock)</div>
                     </div>
                     <button
                       className="btn btn-primary"
@@ -451,7 +451,7 @@ export default function App() {
           {/* Supplier Directory Table */}
           <div className="card">
             <div className="card-header">
-              <span className="card-title">🏢 Existing Suppliers Directory</span>
+              <span className="card-title">Existing Suppliers Directory</span>
               <span className="pill pill-neutral">{suppliersData?.total || 0} Registered</span>
             </div>
             <div className="card-body" style={{ padding: 0 }}>
@@ -571,7 +571,7 @@ export default function App() {
                         {/* 1. Incident & Entity Details */}
                         <div style={{ border: '1px solid var(--border)', background: 'var(--surface-elevated)', borderRadius: 'var(--radius-md)', padding: '1.1rem' }}>
                           <h4 style={{ marginBottom: '0.75rem', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                            📌 Incident Candidate & Identity
+                            Incident Candidate & Identity
                           </h4>
                           <div style={{ fontSize: '0.88rem', lineHeight: 1.8 }}>
                             <div>
@@ -612,7 +612,7 @@ export default function App() {
                         {/* 2. Operational Exposure Calculation */}
                         <div style={{ border: '1px solid var(--border)', background: 'var(--surface-elevated)', borderRadius: 'var(--radius-md)', padding: '1.1rem' }}>
                           <h4 style={{ marginBottom: '0.75rem', color: 'var(--text-primary)', fontSize: '0.95rem' }}>
-                            📊 Deterministic Exposure (Formula EX-003)
+                            Deterministic Exposure (Formula EX-003)
                           </h4>
                           <div style={{ fontSize: '0.88rem', lineHeight: 1.8 }}>
                             <div>
@@ -749,7 +749,7 @@ export default function App() {
         <div>
           <div className="card">
             <div className="card-header">
-              <span className="card-title">📜 Extracted Incident Claims & Verbatim Quote Verification</span>
+              <span className="card-title">Extracted Incident Claims & Verbatim Quote Verification</span>
               <span className="pill pill-neutral">Rule E-005 Verification</span>
             </div>
             <div className="card-body">
@@ -789,7 +789,7 @@ export default function App() {
                           </div>
                           <div>
                             <span className={`pill ${isVerified ? 'pill-success' : 'pill-danger'}`}>
-                              {isVerified ? '✓ VERIFIED QUOTE (Rule E-005)' : '⚠️ QUOTE MISMATCH / UNVERIFIED'}
+                              {isVerified ? 'VERIFIED QUOTE (Rule E-005)' : 'QUOTE MISMATCH / UNVERIFIED'}
                             </span>
                           </div>
                         </div>
@@ -824,7 +824,7 @@ export default function App() {
                               </div>
                               <div>
                                 <a href={sourceDoc.url_original} target="_blank" rel="noopener noreferrer">
-                                  🔗 Open Source URL ({sourceDoc.domain})
+                                  Open Source URL ({sourceDoc.domain})
                                 </a>
                               </div>
                             </div>
@@ -847,7 +847,7 @@ export default function App() {
           {relations.length > 0 && (
             <div className="card">
               <div className="card-header">
-                <span className="card-title">🔗 Source Lineage & Syndicated Reporting Analysis</span>
+                <span className="card-title">Source Lineage & Syndicated Reporting Analysis</span>
                 <span className="pill pill-info">{relations.length} Relations Detected</span>
               </div>
               <div className="card-body">
@@ -905,7 +905,7 @@ export default function App() {
               {/* Proposed Action Card */}
               <div className="card">
                 <div className="card-header">
-                  <span className="card-title">⚖️ Human Review Gate: Incident Disposition</span>
+                  <span className="card-title">Human Review Gate: Incident Disposition</span>
                   <span
                     className={`pill ${
                       activeIncident.review_required ? 'pill-danger' : 'pill-success'
@@ -1082,7 +1082,7 @@ export default function App() {
               {/* Persisted Human Review History */}
               <div className="card">
                 <div className="card-header">
-                  <span className="card-title">📜 Recorded Review Decisions History</span>
+                  <span className="card-title">Recorded Review Decisions History</span>
                   <span className="pill pill-neutral">{reviews.length} Decisions Recorded</span>
                 </div>
                 <div className="card-body">
@@ -1142,7 +1142,7 @@ export default function App() {
       {activeTab === 'audit' && (
         <div className="card">
           <div className="card-header">
-            <span className="card-title">📋 Immutable Audit Trail</span>
+            <span className="card-title">Immutable Audit Trail</span>
             <span className="pill pill-neutral">{auditEvents.length} Events Logged</span>
           </div>
           <div className="card-body" style={{ padding: 0 }}>

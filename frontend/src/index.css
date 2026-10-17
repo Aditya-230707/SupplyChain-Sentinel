@@ -1,4 +1,4 @@
-/* SupplyChain Sentinel — Premium Industrial UI Design System */
+﻿/* SupplyChain Sentinel â€” Premium Industrial UI Design System */
 /* Inspired by Nothing OS, minimalist hardware, broadcast equipment & laboratory instrumentation */
 
 :root {
@@ -161,7 +161,7 @@ code {
   background: linear-gradient(90deg, transparent, rgba(0, 217, 255, 0.4), transparent);
 }
 
-/* Navigation Tabs — Broadcast/Bench Style */
+/* Navigation Tabs â€” Broadcast/Bench Style */
 .tabs-container {
   display: flex;
   gap: 0.25rem;
@@ -308,7 +308,7 @@ code {
   border: 1px solid var(--border);
 }
 
-/* Buttons — Precision Engineering Style */
+/* Buttons â€” Precision Engineering Style */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -440,7 +440,7 @@ code {
   font-size: 0.86rem;
 }
 
-/* Data Tables — Telemetry Instrument View */
+/* Data Tables â€” Telemetry Instrument View */
 table.data-table {
   width: 100%;
   border-collapse: collapse;
