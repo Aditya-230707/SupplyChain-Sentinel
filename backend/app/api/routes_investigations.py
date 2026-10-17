@@ -427,3 +427,28 @@ async def get_investigation_evidence_graph(
         else None,
     )
     return graph.to_dict()
+
+
+@router.get("/investigations/{run_id}/trace")
+async def get_investigation_trace(
+    run_id: str,
+    db: AsyncSession = Depends(get_db_session),
+) -> dict[str, Any]:
+    """Retrieve the next-best-investigation execution trace and VOI step history."""
+    run = await db.get(InvestigationRunModel, run_id)
+    if not run:
+        raise NotFoundError(f"Investigation {run_id} not found")
+
+    metrics = run.metrics_json or {}
+    trace = metrics.get("investigation_trace")
+    if trace:
+        return trace
+
+    return {
+        "enabled": False,
+        "initial_recommendation": None,
+        "final_recommendation": None,
+        "recommendation_changed": False,
+        "identified_gaps": [],
+        "steps": [],
+    }

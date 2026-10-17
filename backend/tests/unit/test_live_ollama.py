@@ -14,6 +14,7 @@ from app.providers.ollama_provider import OllamaProvider
 from app.schemas.claim import ClaimExtractionResponse
 
 
+@pytest.mark.slow
 @pytest.mark.asyncio
 async def test_live_ollama_qwen3_5_structured_output() -> None:
     # Check reachability first
