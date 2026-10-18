@@ -71,18 +71,19 @@ SupplyChain Sentinel is engineered with a clean provider abstraction (`app/provi
 
 ## 3. Evaluation Benchmark Results
 
-We audited the system using an automated 9-case benchmark (`evaluation/benchmark_dataset_v1.json` & `evaluation/runner.py`) comparing SupplyChain Sentinel against a raw Baseline LLM across explicit mathematical denominators:
+We audited the system using an automated 20-case benchmark (`evaluation/benchmark_dataset_v1.json` & `evaluation/runner.py`) comparing SupplyChain Sentinel against a curated deterministic Baseline LLM across explicit mathematical denominators and dynamic flags (detailed in `docs/METRIC_DEFINITIONS.md`):
 
-| Metric | Mathematical Denominator | SupplyChain Sentinel | Baseline LLM | Guarantee |
-|---|---|:---:|:---:|---|
-| **Supplier Attribution Accuracy** | 9 benchmark cases | **100.0%** | 88.9% | Multi-signal entity resolution prevents false company attribution |
-| **Supporting Quote Validity** | 9 extracted claims | **100.0%** | 88.9% | Rule E-005 exact substring check eliminates quote fabrication |
-| **Duplicate Wire Handling** | 2 syndicated wire cases | **100.0%** | 0.0% | Content hashing clusters wire reprints to prevent false corroboration |
-| **False Escalation Rate** | 8 non-critical cases | **0.0%** | 87.5% | Deterministic policy rulebook eliminates premature panic freezes |
-| **Critical Incident Recall** | 1 genuine critical case | **100.0%** | 100.0% | 100% recall on genuine critical disruptions requiring action |
-| **Uncertainty Handling Precision** | 2 missing/ambiguous cases | **100.0%** | 0.0% | Missing data remains null; refuses to invent inventory numbers |
+| Metric | Mathematical Denominator | Baseline LLM | Sentinel 1-Shot | Sentinel + VOI Loop | Guarantee |
+|---|---|:---:|:---:|:---:|---|
+| **Supplier Attribution Accuracy** | 20 total benchmark cases | 85.0% | **95.0%** | **95.0%** | Multi-signal entity & facility resolution vs naive keyword matching |
+| **Supporting Quote Validity** | 20 total extracted claims | 90.0% | **100.0%** | **100.0%** | Rule E-005 exact substring check eliminates quote fabrication |
+| **Duplicate Wire Handling** | 2 syndicated wire cases | 0.0% | **100.0%** | **100.0%** | Content hashing clusters wire reprints to prevent false corroboration |
+| **False Escalation Rate** | 17 non-critical cases | 94.1% | **0.0%** | **0.0%** | Deterministic policy rulebook eliminates premature panic freezes |
+| **Critical Incident Recall** | 3 genuine critical cases | 100.0% | **100.0%** | **100.0%** | 100% recall on genuine critical disruptions requiring action |
+| **Uncertainty Handling Precision** | 3 missing/ambiguous cases | 0.0% | **100.0%** | **100.0%** | Missing data remains null; refuses to invent inventory numbers |
+| **VOI Decision Change Efficiency** | 2 unresolved gap cases | 0.0% | 0.0% | **100.0%** | Directional accuracy and information gain from follow-up inquiries |
 
-*Reproduction:* Run `python evaluation/runner.py` or `pytest backend/tests/unit/test_evaluation_benchmark.py`.
+*Reproduction:* Run `python evaluation/runner.py` or `pytest backend/tests/unit/test_evaluation_benchmark.py`. See complete mathematical definitions in `docs/METRIC_DEFINITIONS.md`.
 
 ---
 

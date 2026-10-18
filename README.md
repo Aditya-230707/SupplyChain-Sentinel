@@ -205,7 +205,7 @@ Sentinel features a 20-case versioned benchmark dataset ([`evaluation/benchmark_
 | **Duplicate Wire Handling** | 2 syndicated wire cases | 0.0% | **100.0%** | **100.0%** | Accurate clustering of syndicated news wires preventing inflated confidence |
 | **False Escalation Rate** | 17 non-escalatable cases | 94.1% | **0.0%** | **0.0%** | Non-critical, irrelevant, or misattributed cases wrongly escalated |
 | **Critical Incident Recall** | 3 genuine critical cases | 100.0% | **100.0%** | **100.0%** | Recall of genuine critical disruptions requiring procurement intervention |
-| **Uncertainty Handling Precision** | 2 missing/ambiguous data cases | 0.0% | **100.0%** | **100.0%** | Correct preservation of nulls and refusal to hallucinate risk |
+| **Uncertainty Handling Precision** | 3 missing/ambiguous data cases | 0.0% | **100.0%** | **100.0%** | Correct preservation of nulls and refusal to hallucinate risk |
 | **VOI Decision Change Efficiency** | 2 unresolved gap cases | 0.0% | 0.0% | **100.0%** | Directional accuracy and information gain achieved by targeted follow-up inquiries |
 
 ### Reproducing the Benchmark

@@ -83,6 +83,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["ANN", "S"]   # relax annotations and security in tests
+"scripts/*" = ["ANN", "S", "E501", "E402"]  # relax annotations, line length, and sys.path imports in utility scripts
 
 [tool.ruff.format]
 quote-style = "double"

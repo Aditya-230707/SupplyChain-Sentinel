@@ -69,6 +69,30 @@ async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+        # Lightweight SQLite column sync for incremental model updates
+        def _sync_sqlite_schema(sync_conn: object) -> None:
+            from sqlalchemy import text
+
+            rows = sync_conn.execute(text("PRAGMA table_info(incident_candidates)")).fetchall()
+            cols = {r[1] for r in rows}
+            if cols and "facility_id" not in cols:
+                sync_conn.execute(
+                    text(
+                        "ALTER TABLE incident_candidates ADD COLUMN facility_id "
+                        "VARCHAR(36) REFERENCES facilities(id)"
+                    )
+                )
+            if cols and "search_mode" not in cols:
+                sync_conn.execute(
+                    text(
+                        "ALTER TABLE incident_candidates ADD COLUMN search_mode "
+                        "VARCHAR(20) DEFAULT 'fixture'"
+                    )
+                )
+
+        if "sqlite" in engine.url.drivername:
+            await conn.run_sync(_sync_sqlite_schema)
+
     log.info("db_tables_created_or_verified")
 
     # Seed initial demo suppliers if DB is freshly created and not in test mode
