@@ -13,7 +13,6 @@
 ---
 
 ## 1. What SupplyChain Sentinel Does
-
 Enterprise supply chain teams are bombarded by breaking news, wire alerts, and social media rumors regarding factory fires, port strikes, and cyberattacks. Generative AI alone frequently hallucinates quotes, conflates same-name companies, treats duplicate syndicated wire releases as independent corroboration, and recommends premature order freezes.
 
 **SupplyChain Sentinel** is a deterministic, evidence-grounded decision intelligence platform:
