@@ -4,7 +4,7 @@
 **Auditor:** Principal AI Systems Architect & Release Auditor  
 **Repository:** `C:\1337\Sentinel`  
 **Git Branch:** `main`  
-**Git Commit:** `61e1e60` (Working tree clean before release validation pass)  
+**Git Commit:** `0faf7d0` (Working tree clean)  
 **Target Hackathon:** Nebius × NVIDIA Global AI Hackathon 2026  
 
 ---
@@ -27,6 +27,7 @@ The application is functionally complete, architecturally sound, and rigorously 
 │ Code Quality (Ruff Linter & Formatter)   │ 64 Files Checked       │ 0 ERRORS             │
 │ Frontend Quality (Typecheck & Lint)      │ Vite Production Build  │ 0 ERRORS (710ms)     │
 │ Nebius Token Factory Adapter             │ Mock Unit Tests        │ VERIFIED             │
+│ Nebius Runtime Pipeline Route Wiring     │ Codepath Audit         │ VERIFIED             │
 │ Nebius Live Cloud Inference              │ Operator Credential    │ UNVERIFIED (No Key)  │
 │ Public Web Demo Deployment               │ Cloud Host Inspection  │ LOCALHOST ONLY       │
 └──────────────────────────────────────────┴────────────────────────┴──────────────────────┘
@@ -55,9 +56,9 @@ The application is functionally complete, architecturally sound, and rigorously 
 - **TypeScript Typecheck (`npm run typecheck`):** Clean exit (`tsc --noEmit`), 0 errors.
 - **ESLint (`npm run lint`):** 0 warnings, 0 errors.
 - **Production Bundle (`npm run build`):** Built cleanly in 710ms.
-  - `dist/index.html`: 0.41 kB (gzip: 0.28 kB)
-  - `dist/assets/index-FtoTznEu.css`: 13.48 kB (gzip: 3.42 kB)
-  - `dist/assets/index-H3zxbxyI.js`: 240.36 kB (gzip: 70.26 kB)
+- `dist/index.html`: 0.41 kB (gzip: 0.28 kB)
+- `dist/assets/index-FtoTznEu.css`: 13.48 kB (gzip: 3.42 kB)
+- `dist/assets/index-H3zxbxyI.js`: 240.36 kB (gzip: 70.26 kB)
 
 ---
 
@@ -75,16 +76,27 @@ The application is functionally complete, architecturally sound, and rigorously 
 - **Structured Output Resilience:** Attempts strict `response_format={"type": "json_schema"}` first; automatically falls back to `response_format={"type": "json_object"}` if the server returns 400.
 - **Health Check Endpoint:** Implements `health_check()` querying `/v1/models` without exposing tokens.
 
-### B. Live Inference Status
+### B. Runtime Selection & Pipeline Callpath Verification
+The application's runtime dispatch was verified end-to-end to ensure Nebius is actively called by the live pipeline:
+1. **Config Validation:** [`backend/app/core/config.py`](file:///C:/1337/Sentinel/backend/app/core/config.py#L84-L95) enforces that when `LLM_PROVIDER=nebius`, non-empty `NEBIUS_API_KEY` and `NEBIUS_MODEL` are mandatory at startup.
+2. **Provider Factory Dispatch:** [`backend/app/providers/factory.py`](file:///C:/1337/Sentinel/backend/app/providers/factory.py#L34-L37) maps `LLM_PROVIDER=nebius` to `make_nebius_provider_from_settings()`.
+3. **Route Injection:** [`backend/app/api/routes_investigations.py`](file:///C:/1337/Sentinel/backend/app/api/routes_investigations.py#L99-L108) calls `get_llm_provider()` and injects the returned `NebiusTokenFactoryProvider` into `run_investigation`.
+4. **Pipeline Orchestrator Execution:** In [`backend/app/pipeline/orchestrator.py`](file:///C:/1337/Sentinel/backend/app/pipeline/orchestrator.py), the provider is used to:
+   - Record `run.provider_name = llm_provider.provider_name` and `run.model_name = llm_provider.model_id` (Lines 162-163).
+   - Execute structured claim extraction on retrieved web sources (Line 271: `llm_provider.generate_structured`).
+   - Execute follow-up gap investigation query generation in the Next-Best-Investigation loop (Line 624: `llm_provider.generate_structured`).
+
+### C. Live Inference Status
 - **Current Runtime Status:** **UNVERIFIED (CREDENTIALS MISSING)**.
 - **Audit Check:** Neither `NEBIUS_API_KEY` nor `NEBIUS_MODEL` is populated in `.env` or system environment.
 - **Distinction of Verification Levels:**
   1. *Unit Tests:* **PASSED** (100% test coverage of provider class, 401 auth error key redaction, 429 quota backoff, timeout handling, fallback to JSON mode).
   2. *Mock Integration Tests:* **PASSED** (Mocked OpenAI SDK responses validate Pydantic output validation).
-  3. *Successful Live Inference:* **NOT EXECUTED** (Awaiting operator key).
-  4. *Actual Use of NVIDIA Model:* **UNVERIFIED IN PRODUCTION ENVIRONMENT**.
+  3. *Runtime Path Integration:* **VERIFIED** (Configuration validation, provider factory, route injection, and pipeline claim extraction callpaths are fully wired to the Nebius adapter).
+  4. *Successful Live Inference:* **NOT EXECUTED** (Awaiting operator key).
+  5. *Actual Use of NVIDIA Model:* **UNVERIFIED IN PRODUCTION ENVIRONMENT**.
 
-### C. Commands to Verify Live Nebius Inference
+### D. Commands to Verify Live Nebius Inference
 When the operator or hackathon judge supplies a key:
 ```powershell
 # 1. Set environment variables
