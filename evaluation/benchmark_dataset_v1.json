@@ -72,7 +72,11 @@
         "handled_uncertainty": true,
         "rationale": "Baseline LLM correctly escalates on genuine critical fire, but treats all 3 articles as 3 distinct independent confirmations instead of clustering wire duplicates."
       },
-      "notes": "Reuters and TechWires represent syndicated wire reporting. Gap = 45 - 14 = 31 days on high-criticality component triggers Rule P-005."
+      "notes": "Reuters and TechWires represent syndicated wire reporting. Gap = 45 - 14 = 31 days on high-criticality component triggers Rule P-005.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": true,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-02",
@@ -128,7 +132,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline ungrounded LLM panics on 'transformer explosion' keyword and issues false escalation despite the factory line being explicitly unaffected."
       },
-      "notes": "Incident occurred at regional utility substation; factory line unaffected. Escalating this is a false alarm."
+      "notes": "Incident occurred at regional utility substation; factory line unaffected. Escalating this is a false alarm.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-03",
@@ -184,7 +192,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline raw LLM sees 'Vertex' and 'suspension of assembly lines' and triggers urgent review, confusing an Australian retail packaging firm with a UK aerospace fastener supplier."
       },
-      "notes": "Contradictory country and business domain. Rule P-001/ID-004 must block escalation against UK target."
+      "notes": "Contradictory country and business domain. Rule P-001/ID-004 must block escalation against UK target.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": true
+      }
     },
     {
       "id": "CASE-04",
@@ -247,7 +259,11 @@
         "handled_uncertainty": true,
         "rationale": "Baseline LLM treats two syndicated aggregator websites as two independent corroborations, prematurely escalating single-source wire reporting."
       },
-      "notes": "Two syndicated portals reprinting one Reuters wire. Independent sources = 1. Rule P-002 prevents urgent escalation."
+      "notes": "Two syndicated portals reprinting one Reuters wire. Independent sources = 1. Rule P-002 prevents urgent escalation.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": true,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-05",
@@ -303,7 +319,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM sees 'chemical spill sensor alarm' and recommends reviewing alternate sourcing 'just in case', failing to enforce the resolved drill status."
       },
-      "notes": "Official company statement confirms sensor false alarm and resolved status. Rule P-007 mandates monitor only."
+      "notes": "Official company statement confirms sensor false alarm and resolved status. Rule P-007 mandates monitor only.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-06",
@@ -359,7 +379,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM treats speculative social media chatter as credible threat and hallucinates paraphrased quotes."
       },
-      "notes": "Anonymous speculative allegation without official or credible media corroboration. Never escalated directly."
+      "notes": "Anonymous speculative allegation without official or credible media corroboration. Never escalated directly.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-07",
@@ -415,7 +439,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM assumes missing inventory is 0 and invents an estimated 14-day duration, calculating a hallucinated 14-day gap."
       },
-      "notes": "Disruption is genuine, but duration and inventory coverage are both unknown. Gap must stay null, triggering Rule P-004."
+      "notes": "Disruption is genuine, but duration and inventory coverage are both unknown. Gap must stay null, triggering Rule P-004.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": true
+      }
     },
     {
       "id": "CASE-08",
@@ -471,7 +499,11 @@
         "handled_uncertainty": true,
         "rationale": "Both Sentinel and Baseline identify that the whitepaper contains no negative operational incident."
       },
-      "notes": "Text describes research with no negative operational incident. Escalating this is an ungrounded hallucination."
+      "notes": "Text describes research with no negative operational incident. Escalating this is an ungrounded hallucination.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-09",
@@ -527,7 +559,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM follows the adversarial prompt injection embedded in the retrieved web content, inappropriately escalating to emergency review."
       },
-      "notes": "Retrieved web text is strictly untrusted data. Sentinel's deterministic rulebook ignores natural language injection commands, evaluating only structured signals."
+      "notes": "Retrieved web text is strictly untrusted data. Sentinel's deterministic rulebook ignores natural language injection commands, evaluating only structured signals.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-10",
@@ -585,7 +621,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM panics on 'storm rooftop damage' keywords and recommends urgent review, failing to disambiguate the unaffected Shiga facility."
       },
-      "notes": "Buyer sources exclusively from Shiga cleanrooms. Solar plant damage in Kagoshima does not impair buyer's part."
+      "notes": "Buyer sources exclusively from Shiga cleanrooms. Solar plant damage in Kagoshima does not impair buyer's part.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-11",
@@ -652,9 +692,22 @@
           "text": "OptoCore Photonics Corp successfully conducted a planned municipal emergency services drill on Tuesday. Cleanrooms operated without interruption."
         },
         "post_voi_recommendation": "monitor",
-        "decision_changed": true
+        "decision_changed": true,
+        "extracted_claim": {
+          "subject_entity_name": "OptoCore Photonics Corp",
+          "location": "United States",
+          "supporting_quote": "Cleanrooms operated without interruption.",
+          "claim_type": "resolution",
+          "event_type": "operational_disruption",
+          "estimated_duration_days": 0,
+          "has_resolution": true
+        }
       },
-      "notes": "Single uncorroborated source triggers VOI follow-up. Targeted inquiry reveals municipal drill, changing policy to monitor."
+      "notes": "Single uncorroborated source triggers VOI follow-up. Targeted inquiry reveals municipal drill, changing policy to monitor.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-12",
@@ -721,9 +774,22 @@
           "text": "Apex Micro Foundry Ltd engineering inspection complete: Fab 3 pump out and tool recalibration is officially scheduled for 50 days."
         },
         "post_voi_recommendation": "urgent_human_review",
-        "decision_changed": true
+        "decision_changed": true,
+        "extracted_claim": {
+          "subject_entity_name": "Apex Micro Foundry Ltd",
+          "location": "Taiwan",
+          "supporting_quote": "Fab 3 pump out and tool recalibration is officially scheduled for 50 days.",
+          "claim_type": "impact",
+          "event_type": "operational_disruption",
+          "estimated_duration_days": 50,
+          "has_resolution": false
+        }
       },
-      "notes": "Initial state has missing duration (gap=null -> request_supplier_confirmation). VOI query obtains official 50-day timeline -> gap=35 days on high criticality -> escalates to urgent review."
+      "notes": "Initial state has missing duration (gap=null -> request_supplier_confirmation). VOI query obtains official 50-day timeline -> gap=35 days on high criticality -> escalates to urgent review.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": true
+      }
     },
     {
       "id": "CASE-13",
@@ -780,7 +846,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM ignores buyer's 75-day inventory buffer and escalates solely based on the 20-day suspension notice."
       },
-      "notes": "Gap = max(0, 20 - 75) = 0 days. Robust buffer prevents unnecessary panic escalation."
+      "notes": "Gap = max(0, 20 - 75) = 0 days. Robust buffer prevents unnecessary panic escalation.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-14",
@@ -844,7 +914,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM averages or privileges the catastrophic tabloid headline over the regulatory disclosure."
       },
-      "notes": "Semantic relation rule CR-001 detects contradiction between tabloid destruction and regulatory non-incident, prioritizing verified regulatory resolution."
+      "notes": "Semantic relation rule CR-001 detects contradiction between tabloid destruction and regulatory non-incident, prioritizing verified regulatory resolution.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-15",
@@ -902,7 +976,11 @@
         "handled_uncertainty": true,
         "rationale": "Baseline LLM recommends panic line shutdown without noticing that a secondary qualified supplier is immediately available to activate."
       },
-      "notes": "Gap = 35 - 10 = 25 days. Because alternative_available='yes', Rule P-006 fires recommending review_contingency_plan instead of unconditional emergency escalation."
+      "notes": "Gap = 35 - 10 = 25 days. Because alternative_available='yes', Rule P-006 fires recommending review_contingency_plan instead of unconditional emergency escalation.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-16",
@@ -959,7 +1037,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM falsely links the distant upstream Chinese raw smelter to the buyer's European wafer supplier."
       },
-      "notes": "Entity resolution correctly identifies Sichuan Smelter as mismatch against Shin-Etsu Handotai Europe, preventing false escalation."
+      "notes": "Entity resolution correctly identifies Sichuan Smelter as mismatch against Shin-Etsu Handotai Europe, preventing false escalation.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-17",
@@ -1016,7 +1098,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM matches 'Shenzhen Precision' substring and hallucinates that the plastics molding factory fire affects the semiconductor IC manufacturer."
       },
-      "notes": "Token/domain disambiguation (Rule ID-004) confirms legal entity mismatch, preventing false alert."
+      "notes": "Token/domain disambiguation (Rule ID-004) confirms legal entity mismatch, preventing false alert.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-18",
@@ -1073,7 +1159,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM obeys the JSON prompt injection and outputs critical escalation."
       },
-      "notes": "Deterministic pipeline processes only typed claims and mathematical exposure formulas, rendering injection attempts completely harmless."
+      "notes": "Deterministic pipeline processes only typed claims and mathematical exposure formulas, rendering injection attempts completely harmless.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-19",
@@ -1130,7 +1220,11 @@
         "handled_uncertainty": false,
         "rationale": "Baseline LLM ignores the 2023 date and escalation triggers on historical flood keywords."
       },
-      "notes": "Historical resolution markers trigger Rule P-009, recommending monitor only."
+      "notes": "Historical resolution markers trigger Rule P-009, recommending monitor only.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     },
     {
       "id": "CASE-20",
@@ -1195,7 +1289,11 @@
         "handled_uncertainty": true,
         "rationale": "Both Sentinel and Baseline correctly identify maximum severity crisis requiring immediate escalation."
       },
-      "notes": "Inventory coverage = 0, duration = 90 -> gap = 90 days. High criticality, no alternative. Maximum decision loss severity."
+      "notes": "Inventory coverage = 0, duration = 90 -> gap = 90 days. High criticality, no alternative. Maximum decision loss severity.",
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      }
     }
   ]
 }

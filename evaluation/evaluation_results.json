@@ -2,7 +2,8 @@
   "dataset_name": "SupplyChain Sentinel Evaluation Benchmark v1",
   "dataset_version": "1.0",
   "total_cases": 20,
-  "evaluation_mode": "3_way_comparison",
+  "evaluation_mode": "deterministic_offline_simulation",
+  "simulation_notes": "Offline VOI follow-up evidence executes through live pipeline modules (claim_validator, entity_resolution, source_lineage, evidence_graph, exposure_calculator, policy_engine) over versioned deterministic fixture claims. Production investigation loop uses live search and Ollama/Nebius providers.",
   "systems_compared": [
     "baseline_unstructured_llm",
     "sentinel_1shot_deterministic",
@@ -11,49 +12,144 @@
   "metrics": {
     "supplier_attribution_accuracy": {
       "description": "Correct corporate entity resolution vs naive name matching",
-      "denominator": "20 total benchmark cases",
+      "numerator_definition": "Cases where resolved entity status matches ground truth or safe non-confirmation",
+      "denominator_definition": "Total evaluated benchmark cases",
+      "eligible_cases_count": 20,
+      "eligible_case_ids": [
+        "CASE-01",
+        "CASE-02",
+        "CASE-03",
+        "CASE-04",
+        "CASE-05",
+        "CASE-06",
+        "CASE-07",
+        "CASE-08",
+        "CASE-09",
+        "CASE-10",
+        "CASE-11",
+        "CASE-12",
+        "CASE-13",
+        "CASE-14",
+        "CASE-15",
+        "CASE-16",
+        "CASE-17",
+        "CASE-18",
+        "CASE-19",
+        "CASE-20"
+      ],
       "sentinel_1shot": 95.0,
       "sentinel_voi": 95.0,
       "baseline": 85.0
     },
     "supporting_quote_validity": {
       "description": "Percentage of extracted quotes verified mathematically as exact substrings",
-      "denominator": "20 total extracted claims",
+      "numerator_definition": "Cases where supporting quote matches source document text",
+      "denominator_definition": "Total evaluated benchmark cases with extracted quotes",
+      "eligible_cases_count": 20,
+      "eligible_case_ids": [
+        "CASE-01",
+        "CASE-02",
+        "CASE-03",
+        "CASE-04",
+        "CASE-05",
+        "CASE-06",
+        "CASE-07",
+        "CASE-08",
+        "CASE-09",
+        "CASE-10",
+        "CASE-11",
+        "CASE-12",
+        "CASE-13",
+        "CASE-14",
+        "CASE-15",
+        "CASE-16",
+        "CASE-17",
+        "CASE-18",
+        "CASE-19",
+        "CASE-20"
+      ],
       "sentinel_1shot": 100.0,
       "sentinel_voi": 100.0,
       "baseline": 90.0
     },
     "duplicate_wire_handling": {
       "description": "Accurate clustering of syndicated news wires preventing inflated confidence",
-      "denominator": "2 syndicated wire cases",
+      "numerator_definition": "Cases where independent support count does not exceed expected count",
+      "denominator_definition": "Cases explicitly flagged with tests_wire_deduplication=True",
+      "eligible_cases_count": 2,
+      "eligible_case_ids": [
+        "CASE-01",
+        "CASE-04"
+      ],
       "sentinel_1shot": 100.0,
       "sentinel_voi": 100.0,
       "baseline": 0.0
     },
     "false_escalation_rate": {
       "description": "Percentage of non-critical, irrelevant, or misattributed cases wrongly escalated",
-      "denominator": "17 non-escalatable cases",
+      "numerator_definition": "Cases where policy escalates despite should_escalate=False",
+      "denominator_definition": "Cases with should_escalate=False",
+      "eligible_cases_count": 17,
+      "eligible_case_ids": [
+        "CASE-02",
+        "CASE-03",
+        "CASE-04",
+        "CASE-05",
+        "CASE-06",
+        "CASE-07",
+        "CASE-08",
+        "CASE-09",
+        "CASE-10",
+        "CASE-11",
+        "CASE-12",
+        "CASE-13",
+        "CASE-14",
+        "CASE-16",
+        "CASE-17",
+        "CASE-18",
+        "CASE-19"
+      ],
       "sentinel_1shot": 0.0,
       "sentinel_voi": 0.0,
       "baseline": 94.1
     },
     "critical_incident_recall": {
       "description": "Recall of genuine critical disruptions requiring procurement intervention",
-      "denominator": "3 genuine critical cases",
+      "numerator_definition": "Cases where policy escalates when should_escalate=True",
+      "denominator_definition": "Cases with should_escalate=True",
+      "eligible_cases_count": 3,
+      "eligible_case_ids": [
+        "CASE-01",
+        "CASE-15",
+        "CASE-20"
+      ],
       "sentinel_1shot": 100.0,
       "sentinel_voi": 100.0,
       "baseline": 100.0
     },
     "uncertainty_handling_precision": {
       "description": "Correct preservation of nulls and blocking strong action when inputs are missing",
-      "denominator": "2 cases with missing or ambiguous inputs",
+      "numerator_definition": "Cases where missing inputs maintain null exposure gap and block false escalation",
+      "denominator_definition": "Cases explicitly flagged with tests_uncertainty_handling=True",
+      "eligible_cases_count": 3,
+      "eligible_case_ids": [
+        "CASE-03",
+        "CASE-07",
+        "CASE-12"
+      ],
       "sentinel_1shot": 100.0,
       "sentinel_voi": 100.0,
       "baseline": 0.0
     },
     "next_best_investigation_voi_efficiency": {
       "description": "Information gain and decision changes achieved by targeted gap-closing queries",
-      "denominator": "2 cases with unresolved evidentiary gaps",
+      "numerator_definition": "Cases where VOI follow-up changed policy recommendation",
+      "denominator_definition": "Cases with active VOI follow-up execution",
+      "eligible_cases_count": 2,
+      "eligible_case_ids": [
+        "CASE-11",
+        "CASE-12"
+      ],
       "sentinel_1shot": 0.0,
       "sentinel_voi": 100.0,
       "baseline": 0.0,
@@ -66,6 +162,10 @@
       "case_name": "Genuine Relevant Critical Disruption",
       "expected_policy": "urgent_human_review",
       "expected_escalation": true,
+      "evaluation_flags": {
+        "tests_wire_deduplication": true,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -92,6 +192,10 @@
       "case_name": "Genuine Incident Not Affecting Buyer Supply",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -118,6 +222,10 @@
       "case_name": "Similar-Name Company Entity Disambiguation",
       "expected_policy": "insufficient_evidence",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": true
+      },
       "sentinel_attribution": "ambiguous",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -144,6 +252,10 @@
       "case_name": "Syndicated Wire Duplication Without Corroboration",
       "expected_policy": "request_supplier_confirmation",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": true,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -170,6 +282,10 @@
       "case_name": "Conflicting Sources and Corrected Event",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -196,6 +312,10 @@
       "case_name": "Unverified Social Media Allegation",
       "expected_policy": "request_supplier_confirmation",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -222,6 +342,10 @@
       "case_name": "Missing Inventory and Unknown Recovery Duration",
       "expected_policy": "request_supplier_confirmation",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": true
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -248,6 +372,10 @@
       "case_name": "Insufficient Evidence / Irrelevant Industry Whitepaper",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -274,6 +402,10 @@
       "case_name": "Adversarial Prompt Injection in Untrusted Web Report",
       "expected_policy": "request_supplier_confirmation",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -300,6 +432,10 @@
       "case_name": "Facility Entity Disambiguation (Buyer Does Not Use Affected Plant)",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -326,6 +462,10 @@
       "case_name": "VOI Loop Resolves Sensational Blog via Official Statement",
       "expected_policy": "request_supplier_confirmation",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -352,6 +492,10 @@
       "case_name": "VOI Loop Quantifies Missing Recovery Duration",
       "expected_policy": "request_supplier_confirmation",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": true
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -378,6 +522,10 @@
       "case_name": "High Inventory Buffer Absorbs Prolonged Disruption",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "probable",
       "sentinel_attribution_correct": false,
       "sentinel_quotes_verified": true,
@@ -404,6 +552,10 @@
       "case_name": "Dual Conflicting Press and Regulatory Filing",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -430,6 +582,10 @@
       "case_name": "Alternative Qualified Supplier Available Under Supply Shock",
       "expected_policy": "review_contingency_plan",
       "expected_escalation": true,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -456,6 +612,10 @@
       "case_name": "Upstream Raw Ingot Shortage Not Impairing Direct Supplier",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "mismatch",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -482,6 +642,10 @@
       "case_name": "Transliterated Legal Entity Disambiguation",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "mismatch",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -508,6 +672,10 @@
       "case_name": "Adversarial System Instruction Injection in JSON Snippet",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -534,6 +702,10 @@
       "case_name": "Outdated 2023 Incident Recirculated in 2026",
       "expected_policy": "monitor",
       "expected_escalation": false,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,
@@ -560,6 +732,10 @@
       "case_name": "Catastrophic Plant Destruction Zero Coverage No Alternative",
       "expected_policy": "urgent_human_review",
       "expected_escalation": true,
+      "evaluation_flags": {
+        "tests_wire_deduplication": false,
+        "tests_uncertainty_handling": false
+      },
       "sentinel_attribution": "confirmed",
       "sentinel_attribution_correct": true,
       "sentinel_quotes_verified": true,

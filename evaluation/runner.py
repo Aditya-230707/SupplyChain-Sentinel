@@ -9,7 +9,7 @@ Performs a rigorous 3-way comparative evaluation across 20 versioned benchmark c
 
 Outputs:
 - Per-case detailed findings.
-- 3-way comparative metrics with explicit mathematical denominators.
+- 3-way comparative metrics with explicit mathematical denominators and eligibility criteria.
 - Persisted JSON report at evaluation/evaluation_results.json.
 """
 
@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 import sys
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -30,6 +30,7 @@ if str(BACKEND_DIR) not in sys.path:
 
 from app.pipeline.claim_validator import verify_quote_against_source
 from app.pipeline.entity_resolution import SupplierProfile, resolve_supplier_entity
+from app.pipeline.evidence_graph import detect_claim_semantic_relations
 from app.pipeline.exposure_calculator import (
     PartExposureInput,
     calculate_operational_exposure,
@@ -48,38 +49,75 @@ class CaseEvaluationResult:
     case_name: str
     expected_policy: str
     expected_escalation: bool
+    evaluation_flags: dict[str, bool] = field(default_factory=dict)
 
     # Sentinel 1-Shot results
-    sentinel_attribution: str
-    sentinel_attribution_correct: bool
-    sentinel_quotes_verified: bool
-    sentinel_duplicates_handled: bool
-    sentinel_exposure_gap: float | None
-    sentinel_policy: str
-    sentinel_escalated: bool
-    sentinel_handled_uncertainty: bool
+    sentinel_attribution: str = ""
+    sentinel_attribution_correct: bool = False
+    sentinel_quotes_verified: bool = False
+    sentinel_duplicates_handled: bool = False
+    sentinel_exposure_gap: float | None = None
+    sentinel_policy: str = ""
+    sentinel_escalated: bool = False
+    sentinel_handled_uncertainty: bool = False
 
     # Sentinel + Next-Best-Investigation (VOI) results
-    voi_enabled: bool
-    voi_executed: bool
-    voi_policy: str
-    voi_decision_changed: bool
-    voi_accuracy_match: bool
+    voi_enabled: bool = False
+    voi_executed: bool = False
+    voi_policy: str = ""
+    voi_decision_changed: bool = False
+    voi_accuracy_match: bool = False
 
     # Baseline results (recorded ungrounded LLM)
-    baseline_attribution: str
-    baseline_attribution_correct: bool
-    baseline_quotes_verified: bool
-    baseline_duplicates_handled: bool
-    baseline_policy: str
-    baseline_escalated: bool
-    baseline_handled_uncertainty: bool
+    baseline_attribution: str = ""
+    baseline_attribution_correct: bool = False
+    baseline_quotes_verified: bool = False
+    baseline_duplicates_handled: bool = False
+    baseline_policy: str = ""
+    baseline_escalated: bool = False
+    baseline_handled_uncertainty: bool = False
 
 
-def run_evaluation() -> dict[str, Any]:
-    dataset_path = Path(__file__).parent / "benchmark_dataset_v1.json"
-    with dataset_path.open(encoding="utf-8") as f:
-        dataset = json.load(f)
+def format_metric_value(num: int, denom: int) -> float | str:
+    """Format rate as percentage rounded to 1 decimal place, or 'unavailable' if denominator is 0."""
+    if denom == 0:
+        return "unavailable"
+    return round((num / denom) * 100.0, 1)
+
+
+def make_metric_entry(
+    description: str,
+    numerator_def: str,
+    denominator_def: str,
+    eligible_cases: list[CaseEvaluationResult],
+    s1_num: int,
+    svoi_num: int,
+    base_num: int,
+) -> dict[str, Any]:
+    denom = len(eligible_cases)
+    return {
+        "description": description,
+        "numerator_definition": numerator_def,
+        "denominator_definition": denominator_def,
+        "eligible_cases_count": denom,
+        "eligible_case_ids": [r.case_id for r in eligible_cases],
+        "sentinel_1shot": format_metric_value(s1_num, denom),
+        "sentinel_voi": format_metric_value(svoi_num, denom),
+        "baseline": format_metric_value(base_num, denom),
+    }
+
+
+def run_evaluation(
+    dataset_path: Path | None = None,
+    dataset_override: dict[str, Any] | None = None,
+    save_output: bool = True,
+) -> dict[str, Any]:
+    if dataset_override is not None:
+        dataset = dataset_override
+    else:
+        path = dataset_path or (Path(__file__).parent / "benchmark_dataset_v1.json")
+        with path.open(encoding="utf-8") as f:
+            dataset = json.load(f)
 
     results: list[CaseEvaluationResult] = []
 
@@ -92,6 +130,9 @@ def run_evaluation() -> dict[str, Any]:
         base_eval = case["baseline_evaluation"]
         expected_policy = case["expected_policy_recommendation"]
         expected_escalate = case["should_escalate"]
+        eval_flags = case.get("evaluation_flags", {})
+        tests_wire_dedup = eval_flags.get("tests_wire_deduplication", False)
+        tests_uncertainty = eval_flags.get("tests_uncertainty_handling", False)
 
         # ---- 1. RUN SUPPLYCHAIN SENTINEL (1-SHOT) ----
         # A. Normalization & Lineage Clustering
@@ -197,16 +238,17 @@ def run_evaluation() -> dict[str, Any]:
             "review_contingency_plan",
         )
 
-        # Uncertainty handling check
+        # Uncertainty handling check: dynamically evaluated for cases testing uncertainty
         sentinel_handled_uncertainty = True
-        if case["expected_disruption_days"] is None and (
-            gap_days is not None or sentinel_rec == "urgent_human_review"
+        if tests_uncertainty and (
+            case["expected_disruption_days"] is None
+            and (gap_days is not None or sentinel_rec == "urgent_human_review")
         ):
             sentinel_handled_uncertainty = False
 
-        # Duplicate wire handling check
+        # Duplicate wire handling check: dynamically evaluated for cases testing wire deduplication
         sentinel_dup_handled = True
-        if c_id in ("CASE-01", "CASE-04") and (
+        if tests_wire_dedup and (
             lineage_res.independent_support_count > case["expected_independent_sources"]
         ):
             sentinel_dup_handled = False
@@ -230,16 +272,74 @@ def run_evaluation() -> dict[str, Any]:
             ]
             post_lineage = analyze_source_lineage(post_source_records)
 
-            post_duration = extracted_duration
-            post_has_resolution = claim.get("has_resolution", False)
-            if (
-                "drill" in voi_source["text"].lower()
-                or "uninterrupted" in voi_source["text"].lower()
-            ):
-                post_has_resolution = True
-                post_duration = Decimal(0)
-            elif "50 days" in voi_source["text"].lower():
-                post_duration = Decimal(50)
+            followup_claim = voi_data.get("extracted_claim")
+            followup_valid = False
+            followup_has_resolution = False
+            followup_duration: Decimal | None = None
+
+            if followup_claim:
+                # 1. Exact quote verification on follow-up evidence (Rule E-005)
+                f_quote = followup_claim.get("supporting_quote")
+                f_quote_valid = verify_quote_against_source(
+                    f_quote, voi_source.get("text", "")
+                ).is_valid
+
+                # 2. Multi-signal entity resolution on follow-up evidence
+                f_entity = resolve_supplier_entity(
+                    supplier=sup_target,
+                    subject_text=followup_claim.get("subject_entity_name", ""),
+                    source_text=voi_source.get("text", ""),
+                    source_domain=voi_source.get("domain", ""),
+                    location_text=followup_claim.get("location"),
+                )
+
+                if f_quote_valid and f_entity.status in ("confirmed", "probable"):
+                    followup_valid = True
+
+                    # 3. Detect claim-level semantic relations (Rule CR-001 Contradiction / Resolution)
+                    initial_claim_dict = {
+                        "id": f"{c_id}-claim-1",
+                        "claim_type": claim.get("claim_type", "incident"),
+                        "event_type": claim.get("event_type", "operational_disruption"),
+                        "source_id": "src-1",
+                    }
+                    followup_claim_dict = {
+                        "id": f"{c_id}-claim-voi",
+                        "claim_type": followup_claim.get("claim_type", "incident"),
+                        "event_type": followup_claim.get(
+                            "event_type", "operational_disruption"
+                        ),
+                        "source_id": f"src-{len(post_sources)}",
+                    }
+                    semantic_relations = detect_claim_semantic_relations(
+                        [initial_claim_dict, followup_claim_dict]
+                    )
+
+                    is_contradiction = any(
+                        r.rule_id == "CR-001" and r.relation == "contradicts"
+                        for r in semantic_relations
+                    )
+
+                    if is_contradiction or followup_claim.get("has_resolution", False):
+                        followup_has_resolution = True
+                        followup_duration = Decimal(0)
+                    elif followup_claim.get("estimated_duration_days") is not None:
+                        followup_duration = Decimal(
+                            str(followup_claim["estimated_duration_days"])
+                        )
+
+            if followup_valid:
+                post_duration = (
+                    followup_duration
+                    if followup_duration is not None
+                    else extracted_duration
+                )
+                post_has_resolution = followup_has_resolution or claim.get(
+                    "has_resolution", False
+                )
+            else:
+                post_duration = extracted_duration
+                post_has_resolution = claim.get("has_resolution", False)
 
             post_part_input = PartExposureInput(
                 part_name=part_info["part_name"],
@@ -286,6 +386,7 @@ def run_evaluation() -> dict[str, Any]:
                 case_name=c_name,
                 expected_policy=expected_policy,
                 expected_escalation=expected_escalate,
+                evaluation_flags=eval_flags,
                 sentinel_attribution=entity_res.status,
                 sentinel_attribution_correct=sentinel_attr_correct,
                 sentinel_quotes_verified=quotes_valid,
@@ -309,163 +410,163 @@ def run_evaluation() -> dict[str, Any]:
             )
         )
 
-    # ---- AGGREGATE METRICS WITH EXPLICIT DENOMINATORS ----
+    # ---- AGGREGATE METRICS WITH DYNAMIC LABELS AND EXPLICIT FORMULAS ----
     total_cases = len(results)
     non_escalate_cases = [r for r in results if not r.expected_escalation]
     critical_cases = [r for r in results if r.expected_escalation]
-    wire_duplicate_cases = [r for r in results if r.case_id in ("CASE-01", "CASE-04")]
-    uncertainty_cases = [r for r in results if r.case_id in ("CASE-03", "CASE-07")]
+    wire_duplicate_cases = [
+        r for r in results if r.evaluation_flags.get("tests_wire_deduplication", False)
+    ]
+    uncertainty_cases = [
+        r
+        for r in results
+        if r.evaluation_flags.get("tests_uncertainty_handling", False)
+    ]
     voi_active_cases = [r for r in results if r.voi_executed]
 
-    # Metric 1: Attribution Accuracy (Denominator: total cases)
-    sentinel_attr_acc = (
-        sum(1 for r in results if r.sentinel_attribution_correct) / total_cases
-    )
-    baseline_attr_acc = (
-        sum(1 for r in results if r.baseline_attribution_correct) / total_cases
-    )
-
-    # Metric 2: Quote Validity (Denominator: total cases with extracted quotes)
-    sentinel_quote_val = (
-        sum(1 for r in results if r.sentinel_quotes_verified) / total_cases
-    )
-    baseline_quote_val = (
-        sum(1 for r in results if r.baseline_quotes_verified) / total_cases
-    )
-
-    # Metric 3: Duplicate / Syndicated Wire Handling (Denominator: duplicate cases)
-    sentinel_dup_rate = sum(
-        1 for r in wire_duplicate_cases if r.sentinel_duplicates_handled
-    ) / len(wire_duplicate_cases)
-    baseline_dup_rate = sum(
-        1 for r in wire_duplicate_cases if r.baseline_duplicates_handled
-    ) / len(wire_duplicate_cases)
-
-    # Metric 4: False Escalation Rate (Denominator: non-escalatable cases)
-    sentinel_false_esc = sum(
-        1 for r in non_escalate_cases if r.sentinel_escalated
-    ) / len(non_escalate_cases)
-    baseline_false_esc = sum(
-        1 for r in non_escalate_cases if r.baseline_escalated
-    ) / len(non_escalate_cases)
-
-    # Metric 5: Recall on Genuinely Critical Disruptions (Denominator: critical cases)
-    sentinel_recall = sum(1 for r in critical_cases if r.sentinel_escalated) / len(
-        critical_cases
-    )
-    baseline_recall = sum(1 for r in critical_cases if r.baseline_escalated) / len(
-        critical_cases
-    )
-
-    # Metric 6: Uncertainty & Missing Data Handling (Denominator: uncertainty cases)
-    sentinel_uncert_acc = sum(
-        1 for r in uncertainty_cases if r.sentinel_handled_uncertainty
-    ) / len(uncertainty_cases)
-    baseline_uncert_acc = sum(
-        1 for r in uncertainty_cases if r.baseline_handled_uncertainty
-    ) / len(uncertainty_cases)
-
-    # Metric 7: Next-Best-Investigation VOI Efficiency
-    voi_change_rate = (
-        sum(1 for r in voi_active_cases if r.voi_decision_changed)
-        / len(voi_active_cases)
-        if voi_active_cases
-        else 0.0
-    )
-    voi_accuracy_rate = (
-        sum(1 for r in voi_active_cases if r.voi_accuracy_match) / len(voi_active_cases)
-        if voi_active_cases
-        else 0.0
-    )
-
     summary = {
-        "dataset_name": dataset["name"],
-        "dataset_version": dataset["version"],
+        "dataset_name": dataset.get("name", "Evaluation Benchmark"),
+        "dataset_version": dataset.get("version", "1.0"),
         "total_cases": total_cases,
-        "evaluation_mode": "3_way_comparison",
+        "evaluation_mode": "deterministic_offline_simulation",
+        "simulation_notes": (
+            "Offline VOI follow-up evidence executes through live pipeline modules "
+            "(claim_validator, entity_resolution, source_lineage, evidence_graph, "
+            "exposure_calculator, policy_engine) over versioned deterministic fixture claims. "
+            "Production investigation loop uses live search and Ollama/Nebius providers."
+        ),
         "systems_compared": [
             "baseline_unstructured_llm",
             "sentinel_1shot_deterministic",
             "sentinel_next_best_investigation_voi",
         ],
         "metrics": {
-            "supplier_attribution_accuracy": {
-                "description": "Correct corporate entity resolution vs naive name matching",
-                "denominator": f"{total_cases} total benchmark cases",
-                "sentinel_1shot": round(sentinel_attr_acc * 100, 1),
-                "sentinel_voi": round(sentinel_attr_acc * 100, 1),
-                "baseline": round(baseline_attr_acc * 100, 1),
-            },
-            "supporting_quote_validity": {
-                "description": "Percentage of extracted quotes verified mathematically as exact substrings",
-                "denominator": f"{total_cases} total extracted claims",
-                "sentinel_1shot": round(sentinel_quote_val * 100, 1),
-                "sentinel_voi": round(sentinel_quote_val * 100, 1),
-                "baseline": round(baseline_quote_val * 100, 1),
-            },
-            "duplicate_wire_handling": {
-                "description": "Accurate clustering of syndicated news wires preventing inflated confidence",
-                "denominator": f"{len(wire_duplicate_cases)} syndicated wire cases",
-                "sentinel_1shot": round(sentinel_dup_rate * 100, 1),
-                "sentinel_voi": round(sentinel_dup_rate * 100, 1),
-                "baseline": round(baseline_dup_rate * 100, 1),
-            },
-            "false_escalation_rate": {
-                "description": "Percentage of non-critical, irrelevant, or misattributed cases wrongly escalated",
-                "denominator": f"{len(non_escalate_cases)} non-escalatable cases",
-                "sentinel_1shot": round(sentinel_false_esc * 100, 1),
-                "sentinel_voi": round(sentinel_false_esc * 100, 1),
-                "baseline": round(baseline_false_esc * 100, 1),
-            },
-            "critical_incident_recall": {
-                "description": "Recall of genuine critical disruptions requiring procurement intervention",
-                "denominator": f"{len(critical_cases)} genuine critical cases",
-                "sentinel_1shot": round(sentinel_recall * 100, 1),
-                "sentinel_voi": 100.0,
-                "baseline": round(baseline_recall * 100, 1),
-            },
-            "uncertainty_handling_precision": {
-                "description": "Correct preservation of nulls and blocking strong action when inputs are missing",
-                "denominator": f"{len(uncertainty_cases)} cases with missing or ambiguous inputs",
-                "sentinel_1shot": round(sentinel_uncert_acc * 100, 1),
-                "sentinel_voi": round(sentinel_uncert_acc * 100, 1),
-                "baseline": round(baseline_uncert_acc * 100, 1),
-            },
+            "supplier_attribution_accuracy": make_metric_entry(
+                description="Correct corporate entity resolution vs naive name matching",
+                numerator_def="Cases where resolved entity status matches ground truth or safe non-confirmation",
+                denominator_def="Total evaluated benchmark cases",
+                eligible_cases=results,
+                s1_num=sum(1 for r in results if r.sentinel_attribution_correct),
+                svoi_num=sum(1 for r in results if r.sentinel_attribution_correct),
+                base_num=sum(1 for r in results if r.baseline_attribution_correct),
+            ),
+            "supporting_quote_validity": make_metric_entry(
+                description="Percentage of extracted quotes verified mathematically as exact substrings",
+                numerator_def="Cases where supporting quote matches source document text",
+                denominator_def="Total evaluated benchmark cases with extracted quotes",
+                eligible_cases=results,
+                s1_num=sum(1 for r in results if r.sentinel_quotes_verified),
+                svoi_num=sum(1 for r in results if r.sentinel_quotes_verified),
+                base_num=sum(1 for r in results if r.baseline_quotes_verified),
+            ),
+            "duplicate_wire_handling": make_metric_entry(
+                description="Accurate clustering of syndicated news wires preventing inflated confidence",
+                numerator_def="Cases where independent support count does not exceed expected count",
+                denominator_def="Cases explicitly flagged with tests_wire_deduplication=True",
+                eligible_cases=wire_duplicate_cases,
+                s1_num=sum(
+                    1 for r in wire_duplicate_cases if r.sentinel_duplicates_handled
+                ),
+                svoi_num=sum(
+                    1 for r in wire_duplicate_cases if r.sentinel_duplicates_handled
+                ),
+                base_num=sum(
+                    1 for r in wire_duplicate_cases if r.baseline_duplicates_handled
+                ),
+            ),
+            "false_escalation_rate": make_metric_entry(
+                description="Percentage of non-critical, irrelevant, or misattributed cases wrongly escalated",
+                numerator_def="Cases where policy escalates despite should_escalate=False",
+                denominator_def="Cases with should_escalate=False",
+                eligible_cases=non_escalate_cases,
+                s1_num=sum(1 for r in non_escalate_cases if r.sentinel_escalated),
+                svoi_num=sum(1 for r in non_escalate_cases if r.sentinel_escalated),
+                base_num=sum(1 for r in non_escalate_cases if r.baseline_escalated),
+            ),
+            "critical_incident_recall": make_metric_entry(
+                description="Recall of genuine critical disruptions requiring procurement intervention",
+                numerator_def="Cases where policy escalates when should_escalate=True",
+                denominator_def="Cases with should_escalate=True",
+                eligible_cases=critical_cases,
+                s1_num=sum(1 for r in critical_cases if r.sentinel_escalated),
+                svoi_num=sum(
+                    1
+                    for r in critical_cases
+                    if (
+                        r.voi_policy
+                        in ("urgent_human_review", "review_contingency_plan")
+                        if r.voi_executed
+                        else r.sentinel_escalated
+                    )
+                ),
+                base_num=sum(1 for r in critical_cases if r.baseline_escalated),
+            ),
+            "uncertainty_handling_precision": make_metric_entry(
+                description="Correct preservation of nulls and blocking strong action when inputs are missing",
+                numerator_def="Cases where missing inputs maintain null exposure gap and block false escalation",
+                denominator_def="Cases explicitly flagged with tests_uncertainty_handling=True",
+                eligible_cases=uncertainty_cases,
+                s1_num=sum(
+                    1 for r in uncertainty_cases if r.sentinel_handled_uncertainty
+                ),
+                svoi_num=sum(
+                    1 for r in uncertainty_cases if r.sentinel_handled_uncertainty
+                ),
+                base_num=sum(
+                    1 for r in uncertainty_cases if r.baseline_handled_uncertainty
+                ),
+            ),
             "next_best_investigation_voi_efficiency": {
                 "description": "Information gain and decision changes achieved by targeted gap-closing queries",
-                "denominator": f"{len(voi_active_cases)} cases with unresolved evidentiary gaps",
+                "numerator_definition": "Cases where VOI follow-up changed policy recommendation",
+                "denominator_definition": "Cases with active VOI follow-up execution",
+                "eligible_cases_count": len(voi_active_cases),
+                "eligible_case_ids": [r.case_id for r in voi_active_cases],
                 "sentinel_1shot": 0.0,
-                "sentinel_voi": round(voi_change_rate * 100, 1),
+                "sentinel_voi": format_metric_value(
+                    sum(1 for r in voi_active_cases if r.voi_decision_changed),
+                    len(voi_active_cases),
+                ),
                 "baseline": 0.0,
-                "directional_accuracy_on_change": round(voi_accuracy_rate * 100, 1),
+                "directional_accuracy_on_change": format_metric_value(
+                    sum(1 for r in voi_active_cases if r.voi_accuracy_match),
+                    len(voi_active_cases),
+                ),
             },
         },
         "case_details": [asdict(r) for r in results],
     }
 
-    output_path = Path(__file__).parent / "evaluation_results.json"
-    with output_path.open("w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
+    if save_output:
+        output_path = Path(__file__).parent / "evaluation_results.json"
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(summary, f, indent=2)
 
     return summary
 
 
 if __name__ == "__main__":
     report = run_evaluation()
-    print("=" * 78)
-    print("SUPPLYCHAIN SENTINEL — 3-WAY COMPARATIVE EVALUATION BENCHMARK")
-    print("=" * 78)
+    print("=" * 82)
+    print("SUPPLYCHAIN SENTINEL - 3-WAY COMPARATIVE EVALUATION BENCHMARK")
+    print("=" * 82)
     print(f"Total Cases: {report['total_cases']}")
-    print("-" * 78)
-    print(f"{'Metric':<38} | {'Baseline':<9} | {'1-Shot':<9} | {'VOI Loop':<9}")
-    print("-" * 78)
+    print("-" * 82)
+    print(
+        f"{'Metric':<38} | {'Eligible':<8} | {'Baseline':<9} | {'1-Shot':<9} | {'VOI Loop':<9}"
+    )
+    print("-" * 82)
     for k, v in report["metrics"].items():
         name = k.replace("_", " ").title()[:36]
-        base = f"{v.get('baseline', 0.0)}%"
-        s1 = f"{v.get('sentinel_1shot', 0.0)}%"
-        svoi = f"{v.get('sentinel_voi', 0.0)}%"
-        print(f"{name:<38} | {base:<9} | {s1:<9} | {svoi:<9}")
-    print("=" * 78)
+        cnt = str(v.get("eligible_cases_count", 0))
+        b_val = v.get("baseline")
+        s1_val = v.get("sentinel_1shot")
+        svoi_val = v.get("sentinel_voi")
+        base = f"{b_val}%" if isinstance(b_val, (int, float)) else str(b_val)
+        s1 = f"{s1_val}%" if isinstance(s1_val, (int, float)) else str(s1_val)
+        svoi = f"{svoi_val}%" if isinstance(svoi_val, (int, float)) else str(svoi_val)
+        print(f"{name:<38} | {cnt:<8} | {base:<9} | {s1:<9} | {svoi:<9}")
+    print("=" * 82)
     print(
         f"Detailed results saved to: {Path(__file__).parent / 'evaluation_results.json'}"
     )
