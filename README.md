@@ -87,7 +87,7 @@ Enterprise supply chain teams are bombarded by breaking news, wire alerts, and s
 
 ---
 
-## 3. Quick Start (Zero API Keys — 100% Deterministic Demo)
+## 3. Quick Start & Unified Hosting (Zero API Keys)
 
 You can run and test SupplyChain Sentinel immediately with zero external API dependencies or cloud accounts.
 
@@ -96,40 +96,67 @@ You can run and test SupplyChain Sentinel immediately with zero external API dep
 - Node.js 18+ and npm
 - Git
 
-### Step 1: Clone and Configure
+---
+
+### Option A: Unified Single-Port Hosting (Recommended)
+FastAPI directly serves the production React SPA bundle alongside all REST APIs and OpenAPI documentation on a single port (`8000`):
+
 ```powershell
+# 1. Clone repository
 git clone https://github.com/Aditya-230707/SupplyChain-Sentinel.git
 cd SupplyChain-Sentinel
 copy .env.example .env
-```
-*(By default, `.env` uses `LLM_PROVIDER=fake` and fixture search mode, requiring no keys).*
 
-### Step 2: Start Backend
+# 2. Build frontend and host unified application
+make host
+```
+*(Or manually without make:)*
 ```powershell
+npm --prefix frontend run build
+.\backend\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --app-dir backend
+```
+
+- **Live Web Interface:** [http://localhost:8000/](http://localhost:8000/)
+- **Interactive OpenAPI Documentation:** [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
+- **Health Diagnostics:** [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
+
+---
+
+### Option B: Containerized Hosting (Docker & Docker Compose)
+```bash
+# Build and run with persistent database volume:
+docker compose up -d --build
+```
+Open [http://localhost:8000/](http://localhost:8000/) in your browser.
+
+---
+
+### Option C: Local Development Mode (Hot Reloading)
+
+```powershell
+# Terminal 1: Backend
 cd backend
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 uvicorn app.main:app --reload --port 8000
-```
-Backend API will be live at: `http://localhost:8000`  
-Interactive Swagger Docs: `http://localhost:8000/docs`
 
-### Step 3: Start Frontend
-```powershell
+# Terminal 2: Frontend
 cd ..\frontend
 npm install
 npm run dev
 ```
 Open your browser at: `http://localhost:5173`
 
+---
+
 ### Step 4: Run an Investigation
-1. In the UI, click on any pre-seeded supplier (e.g. **Silicon Foundry Dresden GmbH** or **Apex Semiconductor Ltd**).
-2. Choose search mode: **DuckDuckGo Live** (real web search, no keys required), **Tavily Live**, or **Fixture (Deterministic Demo)**.
-3. Click **"Run Incident Investigation"**.
-4. Inspect the verified claims, verbatim quote validation, Evidence DAG completeness metrics, and Next-Best-Investigation trace.
-5. In the **Human Review Gate**, select "Accept Recommendation" or "Override", provide rationale, and click **"Record Decision"**.
-6. Check the persistent **Audit Trail** below.
+1. In the UI, navigate to **Investigations** and click **"+ Start Investigation"** (or choose any registered supplier).
+2. Choose search mode: **DuckDuckGo Live** (real web search, no keys required), **Tavily Live**, or **Deterministic Fixture**.
+3. Use the **Sample Scenario** dropdown to pre-fill test cases (**Silicon Foundry Dresden GmbH**, **Titan Energy Solutions**, or **Vertex Components Ltd**).
+4. Inspect the verified claims, verbatim quote validation (Rule E-005), and deterministic operational exposure calculation.
+5. In the **Human Review Gate**, select "Accept Recommendation" or "Override", provide rationale, and click **"Record Decision & Sign Off"**.
+6. Check the persistent **Audit Trail** for the immutable event record.
 
 ---
 
@@ -225,7 +252,7 @@ Or run the automated unit test:
 Run all automated quality gates across backend and frontend:
 
 ```powershell
-# 1. Run all backend unit tests (118 passing tests)
+# 1. Run all backend unit tests (125 passing tests)
 .\backend\.venv\Scripts\pytest -m "not slow"
 
 # 2. Run Ruff lint check

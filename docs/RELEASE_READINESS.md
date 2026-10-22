@@ -1,10 +1,10 @@
 # SupplyChain Sentinel — Final Release Readiness Report
 
-**Date:** October 18, 2026  
+**Date:** October 22, 2026  
 **Auditor:** Principal AI Systems Architect & Release Auditor  
 **Repository:** `C:\1337\Sentinel`  
 **Git Branch:** `main`  
-**Git Commit:** `0faf7d0` (Working tree clean)  
+**Git Commit:** `b9f4470` (Working tree clean)  
 **Target Hackathon:** Nebius × NVIDIA Global AI Hackathon 2026  
 
 ---
@@ -19,17 +19,17 @@ The application is functionally complete, architecturally sound, and rigorously 
 ┌──────────────────────────────────────────┬────────────────────────┬──────────────────────┐
 │ Evaluation Dimension                     │ Verification Method    │ Status               │
 ├──────────────────────────────────────────┼────────────────────────┼──────────────────────┤
-│ Deterministic Evidence Pipeline          │ 124 Unit Tests         │ PASSED (100%)        │
+│ Deterministic Evidence Pipeline          │ 125 Unit Tests         │ PASSED (100%)        │
 │ 12-Stage End-to-End Investigation Trace  │ Executed Trace Script  │ VERIFIED             │
 │ Live Web Search (DuckDuckGo)             │ Live HTTP Web Hits     │ VERIFIED             │
 │ Local LLM Daemon (Ollama qwen3.5:9b)     │ Live HTTP /api/tags    │ VERIFIED (HTTP 200)  │
 │ 20-Case Benchmark Integrity              │ Dynamic Flag Runner    │ VERIFIED (20/20)     │
 │ Code Quality (Ruff Linter & Formatter)   │ 64 Files Checked       │ 0 ERRORS             │
-│ Frontend Quality (Typecheck & Lint)      │ Vite Production Build  │ 0 ERRORS (710ms)     │
+│ Frontend Quality (Typecheck & Lint)      │ Vite Production Build  │ 0 ERRORS (938ms)     │
 │ Nebius Token Factory Adapter             │ Mock Unit Tests        │ VERIFIED             │
 │ Nebius Runtime Pipeline Route Wiring     │ Codepath Audit         │ VERIFIED             │
 │ Nebius Live Cloud Inference              │ Operator Credential    │ UNVERIFIED (No Key)  │
-│ Public Web Demo Deployment               │ Cloud Host Inspection  │ LOCALHOST ONLY       │
+│ Unified Hosting & Deployment             │ FastAPI SPA & Docker   │ READY (Port 8000)    │
 └──────────────────────────────────────────┴────────────────────────┴──────────────────────┘
 ```
 
@@ -187,9 +187,10 @@ Next Best Investigation Voi Efficien   | 2        | 0.0%      | 0.0%      | 100.
 
 ## 6. Demo Deployment Status
 
-- **Local Backend:** Fully operational at `http://localhost:8000`.
-- **Local Frontend:** Fully operational at `http://localhost:5173`.
-- **Public Hosted Demo:** Currently unhosted (runs locally). For hackathon judging, the local application is demonstrator-ready with zero-dependency fixture search and live DuckDuckGo search.
+- **Unified Local Hosting:** Fully operational at `http://localhost:8000` (FastAPI directly serves the compiled React application at `/` alongside all APIs and OpenAPI documentation).
+- **Containerized Deployment:** Dockerfile and `docker-compose.yml` configured and verified with persistent SQLite volume.
+- **PaaS Deployment:** `Procfile` configured for one-click deployment on Render, Railway, Fly.io, or Heroku.
+- **Local Development Mode:** Separate hot-reloading frontend at `http://localhost:5173` with reverse proxy to `http://localhost:8000`.
 
 ---
 
