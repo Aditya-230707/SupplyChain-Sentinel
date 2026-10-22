@@ -102,6 +102,15 @@ def create_app() -> FastAPI:
     app.include_router(investigations_router, prefix="/api/v1")
     app.include_router(reviews_router, prefix="/api/v1")
 
+    # ---- Static Frontend Serving (Unified Hosting) ----------
+    from pathlib import Path
+
+    dist_dir = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+    if dist_dir.exists() and (dist_dir / "index.html").exists():
+        from fastapi.staticfiles import StaticFiles
+
+        app.mount("/", StaticFiles(directory=str(dist_dir), html=True), name="frontend")
+
     return app
 
 

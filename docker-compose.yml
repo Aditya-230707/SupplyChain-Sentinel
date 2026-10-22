@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  sentinel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: supplychain-sentinel
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - LLM_PROVIDER=ollama
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_MODEL=qwen3.5:9b
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/sentinel.db
+      - ALLOW_LIVE_SMOKE_TESTS=false
+    volumes:
+      - sentinel-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  sentinel-data:

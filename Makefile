@@ -68,3 +68,13 @@ doctor:
 # ---- Frontend build -----------------------------------------
 build:
 	cd frontend && npm run build
+
+# ---- Unified Production Hosting -----------------------------
+host: build
+	$(PYTHON) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --app-dir backend
+
+docker-build:
+	docker build -t supplychain-sentinel .
+
+docker-run:
+	docker run -p 8000:8000 -v sentinel-data:/app/data supplychain-sentinel

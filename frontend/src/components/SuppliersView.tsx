@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { SupplierListItem } from '../lib/api'
 
 interface SuppliersViewProps {
@@ -13,81 +14,134 @@ export function SuppliersView({
   onInvestigate,
   onAddSupplier,
 }: SuppliersViewProps) {
+  const [filterQuery, setFilterQuery] = useState('')
+
+  const filtered = suppliers.filter((s) => {
+    if (!filterQuery.trim()) return true
+    const q = filterQuery.toLowerCase()
+    return (
+      s.name.toLowerCase().includes(q) ||
+      (s.country_or_region && s.country_or_region.toLowerCase().includes(q)) ||
+      s.aliases.some((a) => a.toLowerCase().includes(q))
+    )
+  })
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+      {/* Header & Action */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', gap: '1rem', flexWrap: 'wrap' }}>
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-            Supplier Registry & Exposure Profiles
-          </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.84rem' }}>
-            Registered supply chain nodes with verified domains and operational dependencies.
+          <h1 style={{ fontSize: '1.35rem', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+            Suppliers
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', marginTop: '0.25rem' }}>
+            Registered supply chain partners and critical component sources.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={onAddSupplier}>
-          + Add Supplier
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <input
+            type="search"
+            placeholder="Search suppliers or regions…"
+            value={filterQuery}
+            onChange={(e) => setFilterQuery(e.target.value)}
+            className="form-input"
+            style={{ width: '240px', padding: '0.45rem 0.75rem', fontSize: '0.82rem' }}
+          />
+          <button className="btn btn-primary" onClick={onAddSupplier} type="button">
+            + Add Supplier
+          </button>
+        </div>
       </div>
 
-      <div className="card">
-        <div className="card-header">
-          <span className="card-title">Registered Suppliers</span>
-          <span className="pill pill-neutral">{total} Registered</span>
+      {/* Supplier List Panel */}
+      <div className="panel">
+        <div className="panel-header">
+          <span className="panel-title">
+            <span>Supplier Registry</span>
+            <span className="badge badge-neutral">{total} Registered</span>
+          </span>
         </div>
-        <div className="card-body" style={{ padding: 0 }}>
+
+        <div className="table-container">
           <table className="data-table">
             <thead>
               <tr>
                 <th>Supplier Name</th>
-                <th>Region</th>
-                <th>Criticality</th>
+                <th>Region / Jurisdiction</th>
+                <th>Criticality Tier</th>
                 <th>Registered Date</th>
-                <th>Action</th>
+                <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
             <tbody>
-              {suppliers.map((sup) => (
+              {filtered.map((sup) => (
                 <tr key={sup.id}>
                   <td>
-                    <strong style={{ color: 'var(--text-primary)' }}>{sup.name}</strong>
-                    {sup.aliases.length > 0 && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Aliases: {sup.aliases.join(', ')}
-                      </div>
-                    )}
+                    <div>
+                      <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{sup.name}</strong>
+                      {sup.aliases.length > 0 && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                          Known as: {sup.aliases.join(', ')}
+                        </div>
+                      )}
+                    </div>
                   </td>
-                  <td style={{ color: 'var(--text-secondary)' }}>{sup.country_or_region || 'Unknown'}</td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                    {sup.country_or_region || 'Unknown'}
+                  </td>
                   <td>
                     <span
-                      className={`pill ${
+                      className={`badge ${
                         sup.criticality === 'high'
-                          ? 'pill-danger'
+                          ? 'badge-urgent'
                           : sup.criticality === 'medium'
-                          ? 'pill-warning'
-                          : 'pill-neutral'
+                          ? 'badge-caution'
+                          : 'badge-neutral'
                       }`}
+                      style={{ textTransform: 'capitalize' }}
                     >
-                      {sup.criticality.toUpperCase()}
+                      {sup.criticality}
                     </span>
                   </td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                    {new Date(sup.created_at).toLocaleDateString()}
+                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                    {new Date(sup.created_at).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </td>
-                  <td>
+                  <td style={{ textAlign: 'right' }}>
                     <button
-                      className="btn btn-primary"
-                      style={{ padding: '0.25rem 0.65rem', fontSize: '0.78rem' }}
+                      className="btn btn-secondary"
+                      style={{ padding: '0.3rem 0.7rem', fontSize: '0.78rem' }}
                       onClick={() => onInvestigate(sup)}
+                      type="button"
                     >
-                      Investigate Now
+                      Investigate Disruption →
                     </button>
                   </td>
                 </tr>
               ))}
-              {suppliers.length === 0 && (
+
+              {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                    No suppliers registered yet.
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '3.5rem 1rem', color: 'var(--text-muted)' }}>
+                    <div style={{ maxWidth: '360px', margin: '0 auto' }}>
+                      <div style={{ fontSize: '1.5rem', marginBottom: '0.5rem', opacity: 0.7 }}>🏢</div>
+                      <p style={{ fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                        {filterQuery ? 'No matching suppliers found' : 'No suppliers registered yet'}
+                      </p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                        {filterQuery
+                          ? 'Try adjusting your search query.'
+                          : 'Add suppliers to track their news mentions and evaluate supply chain vulnerabilities.'}
+                      </p>
+                      {!filterQuery && (
+                        <button className="btn btn-primary" onClick={onAddSupplier} type="button">
+                          Add First Supplier
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )}

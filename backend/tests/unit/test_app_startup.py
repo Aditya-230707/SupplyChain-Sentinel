@@ -94,3 +94,10 @@ async def test_openapi_schema_loads(client: AsyncClient) -> None:
     assert resp.status_code == 200
     schema = resp.json()
     assert schema["info"]["title"] == "SupplyChain Sentinel"
+
+
+@pytest.mark.asyncio
+async def test_root_serves_frontend_when_dist_present(client: AsyncClient) -> None:
+    resp = await client.get("/")
+    assert resp.status_code == 200
+    assert "SupplyChain Sentinel" in resp.text

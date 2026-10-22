@@ -16,9 +16,9 @@ export interface BenchmarkScenario {
 export const BENCHMARK_SCENARIOS: BenchmarkScenario[] = [
   {
     key: 'dresden',
-    title: 'Benchmark A: Genuine Disruption',
-    badge: 'Urgent Review Expected',
-    badgeClass: 'pill-danger',
+    title: 'Cleanroom Fire (Direct Disruption)',
+    badge: 'Urgent Review',
+    badgeClass: 'badge-urgent',
     supplierName: 'Silicon Foundry Dresden GmbH',
     country: 'Germany',
     domain: 'silicon-dresden.de',
@@ -27,13 +27,13 @@ export const BENCHMARK_SCENARIOS: BenchmarkScenario[] = [
     recovery: '45',
     criticality: 'high',
     summary:
-      'Wafer fab cleanroom fire halting 300mm output for 45 days. Buyer has 14-day stock, resulting in a 31-day operational gap.',
+      'Wafer fab cleanroom fire halting 300mm output for 45 days. With 14-day safety inventory, results in a 31-day operational gap.',
   },
   {
     key: 'titan',
-    title: 'Benchmark B: True Non-Impacting Incident',
-    badge: 'Contingency / Monitor',
-    badgeClass: 'pill-warning',
+    title: 'Substation Incident (Non-Impacting)',
+    badge: 'Monitor Only',
+    badgeClass: 'badge-caution',
     supplierName: 'Titan Energy Solutions',
     country: 'United States',
     domain: 'titan-energy.com',
@@ -42,13 +42,13 @@ export const BENCHMARK_SCENARIOS: BenchmarkScenario[] = [
     recovery: '10',
     criticality: 'medium',
     summary:
-      'Transformer explosion at regional distribution substation with zero manufacturing plant or assembly impact.',
+      'Transformer explosion at regional distribution substation with zero manufacturing plant or assembly line impact.',
   },
   {
     key: 'vertex',
-    title: 'Benchmark C: Name / Entity Mismatch',
-    badge: 'Identity Blocker Expected',
-    badgeClass: 'pill-neutral',
+    title: 'Cybersecurity Alert (Entity Mismatch)',
+    badge: 'Entity Mismatch',
+    badgeClass: 'badge-neutral',
     supplierName: 'Vertex Components Ltd',
     country: 'United Kingdom',
     domain: 'vertex-components.co.uk',
@@ -57,7 +57,7 @@ export const BENCHMARK_SCENARIOS: BenchmarkScenario[] = [
     recovery: null,
     criticality: 'low',
     summary:
-      'Cyber incident reported on "Vertex Ltd" based in Melbourne, Australia. Entity resolution flags geographic contradiction, blocking false escalation.',
+      'Cyber incident reported on "Vertex Ltd" based in Melbourne, Australia. Geographic disambiguation prevents false escalation.',
   },
 ]
 
@@ -66,7 +66,4 @@ export type ActiveTab =
   | 'new_investigation'
   | 'workspace'
   | 'suppliers'
-  | 'evidence'
-  | 'decision'
   | 'audit'
-  | 'telemetry'

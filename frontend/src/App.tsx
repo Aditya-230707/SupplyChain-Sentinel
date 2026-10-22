@@ -22,20 +22,20 @@ import {
   type PolicyRecommendation,
 } from './lib/api'
 import { Sidebar } from './components/Sidebar'
-import { BENCHMARK_SCENARIOS, type ActiveTab } from './lib/constants'
+import type { ActiveTab } from './lib/constants'
 import { TopBar } from './components/TopBar'
 import { InvestigationsView } from './components/InvestigationsView'
 import { NewInvestigationView } from './components/NewInvestigationView'
 import { WorkspaceView } from './components/WorkspaceView'
 import { SuppliersView } from './components/SuppliersView'
-import { EvidenceView } from './components/EvidenceView'
 import { AuditView } from './components/AuditView'
-import { TelemetryView } from './components/TelemetryView'
+import { DiagnosticsModal } from './components/DiagnosticsModal'
 
 export default function App() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<ActiveTab>('investigations')
   const [searchMode, setSearchMode] = useState<'ddg' | 'live' | 'fixture'>('ddg')
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false)
 
   // Selected entities for active investigation workspace
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
@@ -173,7 +173,8 @@ export default function App() {
       setDecisionFeedback(null)
 
       const isOverride =
-        decisionAction in ['reject_recommendation', 'mark_monitor_only'] ||
+        decisionAction === 'reject_recommendation' ||
+        decisionAction === 'mark_monitor_only' ||
         (overrideRec && overrideRec !== activeIncident.policy_decision?.recommendation)
 
       if (isOverride && (!reviewerNote || reviewerNote.trim().length < 5)) {
@@ -190,7 +191,7 @@ export default function App() {
     onSuccess: () => {
       setDecisionFeedback({
         type: 'success',
-        msg: 'Human decision recorded successfully and appended to the immutable audit log.',
+        msg: 'Human decision recorded successfully and logged to the audit trail.',
       })
       queryClient.invalidateQueries({ queryKey: ['incident-reviews', activeIncident?.id] })
       queryClient.invalidateQueries({ queryKey: ['investigation-incidents', activeRunId] })
@@ -258,34 +259,6 @@ export default function App() {
     }
   }
 
-  // Handler: Launch Benchmark Scenario
-  const handleLaunchBenchmarkScenario = async (sc: (typeof BENCHMARK_SCENARIOS)[0]) => {
-    try {
-      setInvestigationError(null)
-      let supplier = suppliersData?.items.find((s) => s.name === sc.supplierName)
-      if (!supplier) {
-        supplier = await createSupplier({
-          name: sc.supplierName,
-          country_or_region: sc.country,
-          official_domains: [sc.domain],
-          criticality: sc.criticality,
-          parts: [
-            {
-              part_name: sc.partName,
-              inventory_coverage_days: sc.coverage,
-              recovery_duration_days: sc.recovery,
-              criticality: sc.criticality,
-            } as any,
-          ],
-        })
-      }
-      setSelectedSupplier(supplier as Supplier)
-      launchMutation.mutate({ supplierId: supplier.id, mode: 'fixture' })
-    } catch (err: any) {
-      setInvestigationError(err.message || 'Benchmark scenario initialization failed')
-    }
-  }
-
   const navigateToRun = (runItem: InvestigationRun) => {
     setActiveRunId(runItem.id)
     setActiveIncidentId(null)
@@ -304,13 +277,12 @@ export default function App() {
         setActiveTab={setActiveTab}
         investigationsCount={investigationsList.length}
         suppliersCount={suppliersData?.total || 0}
-        claimsCount={claims.length}
         auditCount={auditEvents.length}
         activeRunId={activeRunId}
         hasReviewRequired={Boolean(activeIncident?.review_required)}
         providersHealth={providersHealth}
-        onLaunchBenchmark={handleLaunchBenchmarkScenario}
-        isLaunching={launchMutation.isPending}
+        onNewInvestigation={() => setActiveTab('new_investigation')}
+        onOpenDiagnostics={() => setIsDiagnosticsOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -318,7 +290,9 @@ export default function App() {
         <TopBar
           activeTab={activeTab}
           activeRunId={activeRunId}
+          activeSupplierName={selectedSupplier?.name}
           searchMode={searchMode}
+          onNavigateTab={setActiveTab}
           onNewInvestigation={() => setActiveTab('new_investigation')}
         />
 
@@ -326,13 +300,13 @@ export default function App() {
           <div
             style={{
               padding: '0.75rem 1.5rem',
-              background: 'rgba(255, 90, 90, 0.1)',
-              borderBottom: '1px solid rgba(255, 90, 90, 0.3)',
-              color: 'var(--error)',
-              fontSize: '0.85rem',
+              background: 'var(--status-urgent-bg)',
+              borderBottom: '1px solid var(--status-urgent-border)',
+              color: 'var(--status-urgent)',
+              fontSize: '0.84rem',
             }}
           >
-            <strong>Investigation Pipeline Alert:</strong> {investigationError}
+            <strong>Investigation Error:</strong> {investigationError}
           </div>
         )}
 
@@ -359,7 +333,7 @@ export default function App() {
             />
           )}
 
-          {(activeTab === 'workspace' || activeTab === 'decision') && (
+          {activeTab === 'workspace' && (
             <WorkspaceView
               run={run}
               supplier={selectedSupplier}
@@ -397,23 +371,19 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'evidence' && (
-            <EvidenceView claims={claims} sources={sources} />
-          )}
-
           {activeTab === 'audit' && (
             <AuditView auditEvents={auditEvents} />
           )}
-
-          {activeTab === 'telemetry' && (
-            <TelemetryView
-              health={health}
-              providersHealth={providersHealth}
-              isTavilyAvailable={isTavilyAvailable}
-            />
-          )}
         </main>
       </div>
+
+      {/* Diagnostics Modal */}
+      <DiagnosticsModal
+        isOpen={isDiagnosticsOpen}
+        onClose={() => setIsDiagnosticsOpen(false)}
+        health={health}
+        providersHealth={providersHealth}
+      />
     </div>
   )
 }
