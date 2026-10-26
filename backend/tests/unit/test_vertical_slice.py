@@ -17,6 +17,7 @@ Scenarios tested:
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from decimal import Decimal
 
 import pytest
@@ -57,7 +58,7 @@ from app.schemas.claim import ClaimExtractionResponse, ExtractedClaimItem
 
 
 @pytest_asyncio.fixture()
-async def db_session() -> AsyncSession:
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
     """Isolated in-memory SQLite database session for each test."""
     engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
     async with engine.begin() as conn:
@@ -119,7 +120,7 @@ async def test_genuine_relevant_incident_workflow(db_session: AsyncSession) -> N
                 published_date="2026-10-10",
                 provider_score=0.95,
             )
-        ]
+        ],
     )
     content_provider = FixtureContentProvider(
         {
@@ -158,6 +159,19 @@ async def test_genuine_relevant_incident_workflow(db_session: AsyncSession) -> N
     )
 
     assert completed_run.status == "completed"
+    assert search_provider.call_count == 4
+
+    assert search_provider.queries[:3] == [
+        f'"{supplier.name}"',
+        f'"{supplier.name}" incident OR disruption',
+        f'"{supplier.name}" factory OR production OR shutdown',
+    ]
+
+    # The investigation loop may issue an additional corroboration query.
+    assert len(search_provider.queries) == 4
+    assert "single_unverified_source" in str(
+        completed_run.metrics_json.get("investigation_trace", {})
+    )
 
     # Verify sources stored with canonical URL (stripped UTM)
     sources = (
@@ -271,7 +285,6 @@ async def test_irrelevant_incident_mismatch(db_session: AsyncSession) -> None:
         llm_provider=llm_provider,
     )
     assert completed_run.status == "completed"
-
     incidents = (
         (
             await db_session.execute(

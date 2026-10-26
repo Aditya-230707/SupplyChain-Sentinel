@@ -165,16 +165,53 @@ async def run_investigation(
 
     warnings: list[str] = []
 
-    # Stage 1: Bounded Search Queries
-    query = f'"{supplier.name}" incident OR disruption OR factory OR shutdown'
-    search_resp = await search_provider.search(query, max_results=6)
-    if search_resp.status in ("provider_error", "quota_exceeded"):
+
+    # Stage 1: Bounded Multi-Query Search
+    # Search separately so one overly restrictive query does not
+    # prevent us from finding relevant supplier information.
+    search_queries = [
+        f'"{supplier.name}"',
+        f'"{supplier.name}" incident OR disruption',
+        f'"{supplier.name}" factory OR production OR shutdown',
+    ]
+
+    raw_results: list[Any] = []
+
+    for search_query in search_queries:
+        try:
+            search_resp = await search_provider.search(
+                search_query,
+                max_results=4,
+            )
+
+            raw_results.extend(search_resp.results)
+
+            if search_resp.status in (
+                "provider_error",
+                "quota_exceeded",
+                "auth_error",
+                "partial",
+            ):
+                warnings.append(
+                    f"Search provider warning for query "
+                    f"'{search_query}': {search_resp.status} "
+                    f"({search_resp.error_message or 'No additional details'})"
+                )
+
+        except Exception as exc:
+            # Keep other queries running if one search request fails.
+            warnings.append(
+                f"Search request failed for query "
+                f"'{search_query}': {str(exc)[:150]}"
+            )
+
+    if not raw_results:
         warnings.append(
-            f"Search provider warning: {search_resp.status} ({search_resp.error_message})"
+            "No search results were returned across the configured queries. "
+            "This does not establish that the supplier has no incidents."
         )
 
     # Stage 2: Deduplicate & Normalize URLs
-    raw_results = search_resp.results
     candidates_by_canonical: dict[str, Any] = {}
     for r in raw_results:
         canon = canonicalize_url(r.url)
@@ -506,7 +543,7 @@ async def run_investigation(
 
     # Stage 10b: Bounded Next-Best-Investigation Loop (VOI Ranking & Gap Closure)
     trace_steps: list[StepTraceRecord] = []
-    executed_queries: list[str] = [query]
+    executed_queries: list[str] = list(search_queries)
     prior_rec = policy_model.recommendation if policy_model else "inconclusive"
     initial_rec = prior_rec
     rec_changed = False

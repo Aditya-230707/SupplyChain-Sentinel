@@ -20,12 +20,15 @@ class FixtureSearchProvider:
         canned_results: list[SearchResult] | None = None,
         *,
         always_raise: Exception | None = None,
+        fail_on_query: str | None = None,
         status: str = "ok",
     ) -> None:
         self._canned_results = canned_results or []
         self._always_raise = always_raise
+        self._fail_on_query = fail_on_query
         self._status = status
         self.last_query: str | None = None
+        self.queries: list[str] = []
         self.call_count = 0
 
     async def search(
@@ -37,9 +40,12 @@ class FixtureSearchProvider:
     ) -> SearchResponse:
         self.call_count += 1
         self.last_query = query
+        self.queries.append(query)
 
         if self._always_raise:
             raise self._always_raise
+        if self._fail_on_query == query:
+            raise RuntimeError(f"Simulated failure for query: {query}")
 
         results = self._canned_results[:max_results]
         return SearchResponse(
