@@ -1,4 +1,4 @@
-# SupplyChain Sentinel — Developer convenience commands
+# SupplyChain Sentinel — Build, test, and developer commands
 # Usage: make <target>
 # Requires: Python 3.12, Node.js 18+
 # Production (demo/submission): Set LLM_PROVIDER=nebius + NEBIUS_API_KEY + NEBIUS_MODEL in .env

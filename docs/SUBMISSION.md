@@ -1,3 +1,4 @@
+<!-- SupplyChain Sentinel -->
 # SupplyChain Sentinel — Hackathon Submission Package
 > **Hackathon:** Nebius × NVIDIA Global AI Hackathon 2026  
 > **Repository:** [https://github.com/Aditya-230707/SupplyChain-Sentinel](https://github.com/Aditya-230707/SupplyChain-Sentinel)  

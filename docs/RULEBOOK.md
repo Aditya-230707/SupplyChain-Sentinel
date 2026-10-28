@@ -1,3 +1,4 @@
+<!-- SupplyChain Sentinel -->
 # SupplyChain Sentinel — Deterministic Rulebook v2
 
 This document specifies the deterministic policy, evidence evaluation, exposure calculation, and Next-Best-Investigation rules implemented in Sentinel.

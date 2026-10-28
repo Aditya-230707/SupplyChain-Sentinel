@@ -1,3 +1,4 @@
+<!-- SupplyChain Sentinel -->
 # SupplyChain Sentinel — Independent Release Audit Report
 
 **Date:** October 18, 2026  

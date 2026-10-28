@@ -548,7 +548,7 @@ def run_evaluation(
 if __name__ == "__main__":
     report = run_evaluation()
     print("=" * 82)
-    print("SUPPLYCHAIN SENTINEL - 3-WAY COMPARATIVE EVALUATION BENCHMARK")
+    print("SUPPLYCHAIN SENTINEL - 3-WAY COMPARATIVE EVALUATION BENCHMARK SUITE")
     print("=" * 82)
     print(f"Total Cases: {report['total_cases']}")
     print("-" * 82)

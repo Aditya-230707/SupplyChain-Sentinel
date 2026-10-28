@@ -82,7 +82,7 @@ async def run_validation_trace() -> dict[str, object]:
 
     async with session_factory() as db:
         print("=" * 80)
-        print("SUPPLYCHAIN SENTINEL - END-TO-END 12-STAGE INVESTIGATION VALIDATION")
+        print("SUPPLYCHAIN SENTINEL - 12-STAGE INVESTIGATION VALIDATION PIPELINE")
         print("=" * 80)
 
         # STAGE 1: Supplier input & setup

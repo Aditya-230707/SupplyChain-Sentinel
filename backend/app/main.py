@@ -1,5 +1,5 @@
 """
-SupplyChain Sentinel — FastAPI application factory.
+SupplyChain Sentinel — Production FastAPI application factory.
 
 Wires together: settings, structured logging, database, CORS,
 request-ID middleware, and API routers.

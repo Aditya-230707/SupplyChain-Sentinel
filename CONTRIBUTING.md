@@ -1,4 +1,4 @@
-# Contributing to SupplyChain Sentinel
+# Contributing to SupplyChain Sentinel (https://github.com/Aditya-230707/SupplyChain-Sentinel)
 
 Thank you for your interest in contributing to SupplyChain Sentinel! This project is an evidence-first, deterministic supplier incident intelligence platform designed to eliminate LLM hallucinations, duplicate news-wire false alarms, and premature operational disruptions.
 

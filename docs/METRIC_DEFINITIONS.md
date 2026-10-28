@@ -1,3 +1,4 @@
+<!-- SupplyChain Sentinel -->
 # SupplyChain Sentinel — Benchmark Metric Definitions & Mathematical Formulations
 
 This document specifies the exact mathematical formulas, eligibility criteria, numerators, denominators, and behavioral guarantees for all metrics reported by the SupplyChain Sentinel Evaluation Benchmark runner (`evaluation/runner.py`) across the 20 versioned cases in `evaluation/benchmark_dataset_v1.json`.

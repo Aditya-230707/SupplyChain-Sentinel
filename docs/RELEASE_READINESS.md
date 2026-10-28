@@ -1,3 +1,4 @@
+<!-- SupplyChain Sentinel -->
 # SupplyChain Sentinel — Final Release Readiness Report
 
 **Date:** October 28, 2026<br>

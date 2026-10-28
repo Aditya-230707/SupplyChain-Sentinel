@@ -1,4 +1,4 @@
-# SupplyChain Sentinel
+# SupplyChain Sentinel — Autonomous Risk Intelligence
 
 > **Evidence-First Supplier Incident Intelligence**  
 > Built for the *Nebius × NVIDIA Global AI Hackathon 2026*

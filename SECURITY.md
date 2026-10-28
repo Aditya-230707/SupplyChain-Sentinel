@@ -1,4 +1,4 @@
-# Security Policy
+# Security Policy — SupplyChain Sentinel
 
 ## Supported Versions
 

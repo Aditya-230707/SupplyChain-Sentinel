@@ -1,3 +1,4 @@
+# SupplyChain Sentinel Workflow Verification
 """End-to-end validation script for SupplyChain Sentinel release candidate.
 
 Simulates the full user workflow against the FastAPI backend:

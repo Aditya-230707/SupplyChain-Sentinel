@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for SupplyChain Sentinel
+# Multi-stage Production Dockerfile for SupplyChain Sentinel
 # Builds the production React frontend and hosts both API & UI from FastAPI.
 
 # Stage 1: Build Frontend
