@@ -1,6 +1,7 @@
 # SupplyChain Sentinel — Developer convenience commands
 # Usage: make <target>
-# Requires: Python 3.12, Node.js 18+, Ollama
+# Requires: Python 3.12, Node.js 18+
+# Production (demo/submission): Set LLM_PROVIDER=nebius + NEBIUS_API_KEY + NEBIUS_MODEL in .env
 
 ifeq ($(OS),Windows_NT)
     VENV_BIN := backend/venv/Scripts
@@ -61,9 +62,10 @@ typecheck:
 doctor:
 	@echo "=== Python version ==="
 	$(PYTHON) --version
-	@echo "=== Ollama status ==="
-	$(PYTHON) -c "import asyncio; from app.providers.ollama_provider import make_ollama_provider_from_settings; import sys; sys.path.insert(0,'backend'); asyncio.run(make_ollama_provider_from_settings().health_check())"
-	@echo "Run 'ollama pull qwen3.5:9b' if model is not available"
+	@echo "=== LLM Provider ==="
+	$(PYTHON) -c "from app.core.config import get_settings; import sys; sys.path.insert(0,'backend'); s=get_settings(); print('Provider:', s.llm_provider)"
+	@echo "=== Nebius health check (requires NEBIUS_API_KEY + LLM_PROVIDER=nebius) ==="
+	$(PYTHON) -c "import asyncio, sys; sys.path.insert(0,'backend'); from app.providers.nebius_provider import make_nebius_provider_from_settings; p=make_nebius_provider_from_settings(); print(asyncio.run(p.health_check()))" || echo "  Skipped — set LLM_PROVIDER=nebius and NEBIUS_API_KEY to run"
 
 # ---- Frontend build -----------------------------------------
 build:
@@ -72,6 +74,10 @@ build:
 # ---- Unified Production Hosting -----------------------------
 host: build
 	$(PYTHON) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --app-dir backend
+
+# Production hosting with Nebius (requires NEBIUS_API_KEY + NEBIUS_MODEL in .env)
+host-nebius: build
+	LLM_PROVIDER=nebius $(PYTHON) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --app-dir backend
 
 docker-build:
 	docker build -t supplychain-sentinel .

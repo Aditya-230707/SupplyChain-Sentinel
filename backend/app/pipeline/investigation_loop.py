@@ -154,6 +154,7 @@ def generate_candidate_investigations(
     """Generate grounded search candidates to resolve each identified evidence gap."""
     candidates: list[CandidateInvestigation] = []
     executed_lower = {q.lower().strip() for q in executed_queries}
+    clean_supplier = supplier_name.replace('"', "").strip()
 
     for idx, gap in enumerate(gaps):
         cand: CandidateInvestigation | None = None
@@ -161,7 +162,7 @@ def generate_candidate_investigations(
         if gap.gap_type == "missing_duration":
             cand = CandidateInvestigation(
                 action_id=f"act_dur_{idx}",
-                query=f'"{supplier_name}" restart timeline recovery weeks duration operational',
+                query=f'"{clean_supplier}" restart timeline recovery weeks duration operational',
                 targeted_gap=gap.gap_type,
                 rationale="Search for estimated facility repair duration or restart timeline.",
                 expected_source_type="company_statement",
@@ -169,7 +170,9 @@ def generate_candidate_investigations(
         elif gap.gap_type == "conflicting_claims":
             cand = CandidateInvestigation(
                 action_id=f"act_conf_{idx}",
-                query=f'"{supplier_name}" drill exercise correction false alarm official statement',
+                query=(
+                    f'"{clean_supplier}" drill exercise correction false alarm official statement'
+                ),
                 targeted_gap=gap.gap_type,
                 rationale="Search for corporate clarification or resolution notice.",
                 expected_source_type="regulatory",
@@ -177,7 +180,7 @@ def generate_candidate_investigations(
         elif gap.gap_type == "single_unverified_source":
             cand = CandidateInvestigation(
                 action_id=f"act_corrob_{idx}",
-                query=f'"{supplier_name}" press release official statement incident disruption',
+                query=f'"{clean_supplier}" press release official statement incident disruption',
                 targeted_gap=gap.gap_type,
                 rationale="Seek independent primary confirmation to corroborate press report.",
                 expected_source_type="company_statement",
@@ -185,7 +188,7 @@ def generate_candidate_investigations(
         elif gap.gap_type == "ambiguous_identity":
             cand = CandidateInvestigation(
                 action_id=f"act_ident_{idx}",
-                query=f'"{supplier_name}" headquarters stock ticker corporate registry',
+                query=f'"{clean_supplier}" headquarters stock ticker corporate registry',
                 targeted_gap=gap.gap_type,
                 rationale="Disambiguate corporate legal entity, jurisdiction, and ticker.",
                 expected_source_type="regulatory",
@@ -193,7 +196,7 @@ def generate_candidate_investigations(
         elif gap.gap_type == "facility_unresolved":
             cand = CandidateInvestigation(
                 action_id=f"act_fac_{idx}",
-                query=f'"{supplier_name}" manufacturing plant fab location facility damage fire',
+                query=f'"{clean_supplier}" manufacturing plant fab location facility damage fire',
                 targeted_gap=gap.gap_type,
                 rationale="Pinpoint exact manufacturing plant or cleanroom building affected.",
                 expected_source_type="news_verification",

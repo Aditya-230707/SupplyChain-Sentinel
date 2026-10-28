@@ -250,3 +250,67 @@ async def test_ddg_content_ssrf_blocking() -> None:
     for r in results:
         assert r.status == "inaccessible"
         assert "private or invalid" in (r.error_message or "")
+
+
+@pytest.mark.asyncio
+async def test_ddg_advanced_ssrf_blocking() -> None:
+    """Adversarial regression test: verify cloud metadata and IPv6 mapped addresses are blocked."""
+    from app.providers.ddg_provider import DuckDuckGoContentProvider
+
+    provider = DuckDuckGoContentProvider()
+    results = await provider.extract(
+        [
+            "http://169.254.169.254/latest/meta-data/",
+            "http://metadata.google.internal/computeMetadata/v1/",
+            "http://[::ffff:127.0.0.1]/admin",
+            "http://metadata/secret",
+        ]
+    )
+
+    assert len(results) == 4
+    for r in results:
+        assert r.status == "inaccessible"
+        assert "private or invalid" in (r.error_message or "")
+
+
+@pytest.mark.asyncio
+async def test_ddg_ssrf_redirect_blocking() -> None:
+    """Regression test: verify 302 redirects to cloud metadata / loopback are blocked."""
+    import httpx
+
+    from app.providers.ddg_provider import DuckDuckGoContentProvider
+
+    provider = DuckDuckGoContentProvider()
+
+    # Create a mock transport that redirects to 169.254.169.254
+    class MockRedirectTransport(httpx.AsyncBaseTransport):
+        async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+            if "redirect-to-metadata" in str(request.url):
+                return httpx.Response(
+                    302,
+                    headers={"Location": "http://169.254.169.254/latest/meta-data/"},
+                    request=request,
+                )
+            return httpx.Response(200, text="OK", request=request)
+
+        async def aclose(self) -> None:
+            pass
+
+    async def _check_redirect(response: httpx.Response) -> None:
+        if response.is_redirect:
+            loc = response.headers.get("Location")
+            if loc:
+                target = str(response.url.join(loc))
+                if not provider._is_safe_url(target):
+                    msg = f"Blocked SSRF redirect to unsafe destination: {target}"
+                    raise httpx.RequestError(msg, request=response.request)
+
+    async with httpx.AsyncClient(
+        transport=MockRedirectTransport(),
+        follow_redirects=True,
+        event_hooks={"response": [_check_redirect]},
+    ) as client:
+        res = await provider.fetch_one(client, "http://example.com/redirect-to-metadata")
+
+    assert res.status == "inaccessible"
+    assert "Blocked: redirect to unsafe URL" in (res.error_message or "")

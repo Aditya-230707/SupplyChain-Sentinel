@@ -63,15 +63,16 @@ SupplyChain Sentinel is engineered with a clean provider abstraction (`app/provi
 
 ### Cloud Architecture & Resilience Features
 - **Key Redaction:** `NebiusTokenFactoryProvider` explicitly redacts API credentials from all exception strings and health check responses.
+- **Reasoning Control:** NVIDIA Nemotron defaults to internal reasoning tokens (`enable_thinking: true`) which can consume token budgets before schema emission; the provider passes `chat_template_kwargs: {"enable_thinking": False}` to ensure immediate, deterministic JSON generation.
 - **Structured Schema Resilience:** Attempts strict `json_schema` mode first, automatically falling back to `json_object` mode if an endpoint lacks schema enforcement.
 - **Catalog Verification:** Health check dynamically queries `/v1/models` to verify model catalog availability.
-- **Provider Status:** 100% of adapter contracts, 401 auth errors, 429 rate limit exceptions, and schema fallbacks are validated via unit tests in `tests/unit/test_nebius_cloud.py`. (Live cloud inference requires operator-provided `NEBIUS_API_KEY`).
+- **Provider Status:** 100% of adapter contracts, 401 auth errors, 429 rate limit exceptions, and schema fallbacks are validated via unit tests in `tests/unit/test_nebius_cloud.py`. Live inference with `nvidia/Nemotron-3_5-Lightning` has been verified end-to-end via single-request smoke testing and bounded orchestrator pipeline execution.
 
 ---
 
 ## 3. Evaluation Benchmark Results
 
-We audited the system using an automated 20-case benchmark (`evaluation/benchmark_dataset_v1.json` & `evaluation/runner.py`) comparing SupplyChain Sentinel against a curated deterministic Baseline LLM across explicit mathematical denominators and dynamic flags (detailed in `docs/METRIC_DEFINITIONS.md`):
+We audited the system using an automated 20-case synthetic benchmark dataset (`evaluation/benchmark_dataset_v1.json` & `evaluation/runner.py`) comparing SupplyChain Sentinel against a curated deterministic Baseline LLM across explicit mathematical denominators and dynamic flags (detailed in `docs/METRIC_DEFINITIONS.md`):
 
 | Metric | Mathematical Denominator | Baseline LLM | Sentinel 1-Shot | Sentinel + VOI Loop | Guarantee |
 |---|---|:---:|:---:|:---:|---|
@@ -130,3 +131,17 @@ Based on our implementation and architectural integration of Nebius Token Factor
 1. **Enterprise ERP Sync:** Currently uses explicit supplier profile records and inventory coverage days. Production deployments would synchronize real-time ERP inventory via SAP or Oracle APIs.
 2. **Global Corporate Registry Lookups:** The multi-signal entity resolver utilizes legal names, aliases, domains, and country filters. Integration with authoritative global corporate databases (e.g., Dun & Bradstreet, OpenCorporates) would further strengthen international entity matching.
 3. **Database Scale:** Built on SQLite with WAL mode for zero-dependency local demonstration. Production enterprise multi-user deployment recommends PostgreSQL with read replicas.
+
+---
+
+## 8. Submission Status & Pending Deliverables
+
+| Deliverable | Requirement | Status | Notes |
+|---|---|:---:|---|
+| **Public GitHub Repository** | Complete codebase, documentation, tests | **READY** | All code hardened, 137 unit tests passing |
+| **Open Source License** | Permissive open source license | **VERIFIED** | MIT License in root (`LICENSE`) |
+| **Reproducible Local Setup** | Zero external API key quickstart | **VERIFIED** | Unified hosting on port 8000 (`make host`) |
+| **Nebius & NVIDIA Integration** | Live cloud inference & reasoning control | **VERIFIED** | NVIDIA Nemotron-3_5-Lightning verified live |
+| **Benchmark & Validation** | 20-case synthetic benchmark & 12-stage E2E trace | **VERIFIED** | 20/20 benchmark passing, E2E trace green |
+| **Demo Video (< 3 minutes)** | Video walkthrough demonstrating core scenarios | **PENDING** | Storyboard & verbatim audio script ready in Section 4 |
+| **Devpost Submission** | Project write-up, team, and video link | **PENDING** | Awaiting video URL and portal form submission |

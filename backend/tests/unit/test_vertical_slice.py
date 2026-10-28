@@ -642,3 +642,109 @@ async def test_fabricated_quote_marked_quote_mismatch(db_session: AsyncSession) 
     # Rule E-005 blocks hallucinated quote
     assert claims[0].extraction_status == "quote_mismatch"
     assert claims[0].quote_start is None
+
+
+@pytest.mark.asyncio
+async def test_nebius_orchestrator_pipeline_integration_offline(
+    db_session: AsyncSession,
+) -> None:
+    """Offline regression test: NebiusTokenFactoryProvider with orchestrator pipeline."""
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from app.providers.nebius_provider import NebiusTokenFactoryProvider
+
+    supplier = SupplierModel(
+        name="Silicon Foundry Dresden GmbH",
+        aliases=["SFD"],
+        official_domains=["silicon-dresden.de"],
+        country_or_region="Germany",
+        criticality="high",
+    )
+    db_session.add(supplier)
+    await db_session.flush()
+
+    part = SupplierPartModel(
+        supplier_id=supplier.id,
+        part_name="Automotive MCU-4",
+        inventory_coverage_days=Decimal("14"),
+        typical_lead_time_days=Decimal("60"),
+        recovery_duration_days=Decimal("45"),
+    )
+    db_session.add(part)
+
+    run = InvestigationRunModel(supplier_id=supplier.id, status="pending")
+    db_session.add(run)
+    await db_session.commit()
+    await db_session.refresh(run)
+
+    source_url = "https://press.silicon-dresden.de/notices/cleanroom-incident"
+    source_text = (
+        "Silicon Foundry Dresden GmbH experienced an electrical fire at its cleanroom on Tuesday. "
+        "Production halted for 45 days."
+    )
+    search_provider = FixtureSearchProvider(
+        canned_results=[
+            SearchResult(
+                url=source_url,
+                title="Notice",
+                snippet=source_text,
+                domain="silicon-dresden.de",
+                published_date="2026-10-14",
+                provider_score=0.95,
+            )
+        ]
+    )
+    content_provider = FixtureContentProvider(url_content_map={source_url: source_text})
+
+    # Nebius provider with mocked OpenAI client returning structured ClaimExtractionResponse JSON
+    nebius_provider = NebiusTokenFactoryProvider(
+        api_key="sk-test-mock-key",
+        model_id="nvidia/Nemotron-3_5-Lightning",
+        max_retries=0,
+        allow_fallback=False,
+    )
+    mock_choice = MagicMock()
+    mock_choice.message.content = (
+        '{"claims": [{'
+        '"subject_text": "Silicon Foundry Dresden GmbH", '
+        '"event_type": "operational_disruption", '
+        '"object_text": "electrical fire at cleanroom", '
+        '"claim_type": "incident", '
+        '"polarity": "supports", '
+        '"supporting_quote": "Silicon Foundry Dresden GmbH experienced '
+        'an electrical fire at its cleanroom on Tuesday."'
+        "}]}"
+    )
+    mock_choice.finish_reason = "stop"
+    mock_resp = MagicMock()
+    mock_resp.choices = [mock_choice]
+    mock_resp.usage.completion_tokens = 45
+    mock_resp.usage.prompt_tokens = 120
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_resp)
+
+    with patch.object(nebius_provider, "_get_client", return_value=mock_client):
+        final_run = await run_investigation(
+            investigation_id=run.id,
+            db=db_session,
+            search_provider=search_provider,
+            content_provider=content_provider,
+            llm_provider=nebius_provider,
+            max_followup_iterations=0,
+        )
+
+    assert final_run.status == "completed"
+    assert final_run.provider_name == "nebius"
+    assert final_run.model_name == "nvidia/Nemotron-3_5-Lightning"
+
+    # Verify claim schema and supporting_quote attribute
+    claims = (
+        (await db_session.execute(select(ClaimModel).where(ClaimModel.investigation_id == run.id)))
+        .scalars()
+        .all()
+    )
+    assert len(claims) == 1
+    assert claims[0].extraction_status == "validated"
+    assert claims[0].supporting_quote is not None
+    assert "electrical fire" in claims[0].supporting_quote

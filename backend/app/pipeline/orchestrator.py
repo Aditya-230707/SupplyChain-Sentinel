@@ -165,14 +165,14 @@ async def run_investigation(
 
     warnings: list[str] = []
 
-
     # Stage 1: Bounded Multi-Query Search
     # Search separately so one overly restrictive query does not
     # prevent us from finding relevant supplier information.
+    clean_supplier_name = supplier.name.replace('"', "").strip()
     search_queries = [
-        f'"{supplier.name}"',
-        f'"{supplier.name}" incident OR disruption',
-        f'"{supplier.name}" factory OR production OR shutdown',
+        f'"{clean_supplier_name}"',
+        f'"{clean_supplier_name}" incident OR disruption',
+        f'"{clean_supplier_name}" factory OR production OR shutdown',
     ]
 
     raw_results: list[Any] = []
@@ -200,10 +200,7 @@ async def run_investigation(
 
         except Exception as exc:
             # Keep other queries running if one search request fails.
-            warnings.append(
-                f"Search request failed for query "
-                f"'{search_query}': {str(exc)[:150]}"
-            )
+            warnings.append(f"Search request failed for query '{search_query}': {str(exc)[:150]}")
 
     if not raw_results:
         warnings.append(

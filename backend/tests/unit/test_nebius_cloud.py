@@ -155,6 +155,210 @@ async def test_nebius_structured_fallback_to_json_object() -> None:
 
 
 @pytest.mark.asyncio
+async def test_nebius_empty_choices_raises_provider_error() -> None:
+    """Verify that a response with empty choices list raises ProviderError."""
+    provider = NebiusTokenFactoryProvider(
+        api_key="sk-test-mock",
+        model_id="nvidia/Nemotron-3_5-Lightning",
+        max_retries=0,
+    )
+    mock_resp = MagicMock()
+    mock_resp.choices = []
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_resp)
+
+    with patch.object(provider, "_get_client", return_value=mock_client):
+        with pytest.raises(ProviderError) as exc_info:
+            await provider.generate_structured(
+                task_name="test_empty_choices",
+                system_prompt="sys",
+                user_payload={"test": 1},
+                response_model=SimpleIncidentPayload,
+            )
+
+    assert "empty choices list" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_nebius_finish_reason_length_raises_provider_error() -> None:
+    """Verify that truncation (finish_reason='length') with empty content raises ProviderError."""
+    provider = NebiusTokenFactoryProvider(
+        api_key="sk-test-mock",
+        model_id="nvidia/Nemotron-3_5-Lightning",
+        max_retries=0,
+    )
+    mock_choice = MagicMock()
+    mock_choice.message.content = ""
+    mock_choice.message.refusal = None
+    mock_choice.message.reasoning_content = None
+    mock_choice.finish_reason = "length"
+
+    mock_resp = MagicMock()
+    mock_resp.choices = [mock_choice]
+    mock_resp.usage.completion_tokens = 128
+    mock_resp.usage.prompt_tokens = 45
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_resp)
+
+    with patch.object(provider, "_get_client", return_value=mock_client):
+        with pytest.raises(ProviderError) as exc_info:
+            await provider.generate_structured(
+                task_name="test_length_truncation",
+                system_prompt="sys",
+                user_payload={"test": 1},
+                response_model=SimpleIncidentPayload,
+            )
+
+    assert "token limit reached" in str(exc_info.value)
+    assert "finish_reason='length'" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_nebius_model_refusal_raises_provider_error() -> None:
+    """Verify that a model refusal indicator raises ProviderError."""
+    provider = NebiusTokenFactoryProvider(
+        api_key="sk-test-mock",
+        model_id="nvidia/Nemotron-3_5-Lightning",
+        max_retries=0,
+    )
+    mock_choice = MagicMock()
+    mock_choice.message.content = ""
+    mock_choice.message.refusal = "Content violates safety policy"
+    mock_choice.finish_reason = "stop"
+
+    mock_resp = MagicMock()
+    mock_resp.choices = [mock_choice]
+    mock_resp.usage.completion_tokens = 5
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_resp)
+
+    with patch.object(provider, "_get_client", return_value=mock_client):
+        with pytest.raises(ProviderError) as exc_info:
+            await provider.generate_structured(
+                task_name="test_refusal",
+                system_prompt="sys",
+                user_payload={"test": 1},
+                response_model=SimpleIncidentPayload,
+            )
+
+    assert "Nebius model refusal" in str(exc_info.value)
+    assert "safety policy" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_nebius_reasoning_without_content_raises_schema_validation_error() -> None:
+    """Verify that reasoning without content raises SchemaValidationError."""
+    from app.core.errors import SchemaValidationError
+
+    provider = NebiusTokenFactoryProvider(
+        api_key="sk-test-mock",
+        model_id="nvidia/Nemotron-3_5-Lightning",
+        max_retries=0,
+    )
+    mock_choice = MagicMock()
+    mock_choice.message.content = ""
+    mock_choice.message.refusal = None
+    mock_choice.message.reasoning_content = (
+        'Thinking: {"incident_type": "strike", "severity_level": "medium", "estimated_days": 5}'
+    )
+    mock_choice.finish_reason = "stop"
+
+    mock_resp = MagicMock()
+    mock_resp.choices = [mock_choice]
+    mock_resp.usage.completion_tokens = 35
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_resp)
+
+    with patch.object(provider, "_get_client", return_value=mock_client):
+        with pytest.raises(SchemaValidationError) as exc_info:
+            await provider.generate_structured(
+                task_name="test_reasoning_without_content",
+                system_prompt="sys",
+                user_payload={"test": 1},
+                response_model=SimpleIncidentPayload,
+            )
+
+    assert "empty message content" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_nebius_extra_body_forwarded_to_client() -> None:
+    """Verify that extra_body (such as enable_thinking control) is passed to the SDK client."""
+    provider = NebiusTokenFactoryProvider(
+        api_key="sk-test-mock",
+        model_id="nvidia/Nemotron-3_5-Lightning",
+        max_retries=0,
+    )
+    mock_choice = MagicMock()
+    mock_choice.message.content = (
+        '{"incident_type": "fire", "severity_level": "high", "estimated_days": 10}'
+    )
+    mock_choice.finish_reason = "stop"
+
+    mock_resp = MagicMock()
+    mock_resp.choices = [mock_choice]
+    mock_resp.usage.completion_tokens = 25
+    mock_resp.usage.prompt_tokens = 50
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_resp)
+
+    with patch.object(provider, "_get_client", return_value=mock_client):
+        res = await provider.generate_structured(
+            task_name="test_extra_body",
+            system_prompt="sys",
+            user_payload={"test": 1},
+            response_model=SimpleIncidentPayload,
+            extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+        )
+
+    assert isinstance(res.parsed_output, SimpleIncidentPayload)
+    call_kwargs = mock_client.chat.completions.create.call_args.kwargs
+    assert call_kwargs.get("extra_body") == {"chat_template_kwargs": {"enable_thinking": False}}
+
+
+@pytest.mark.asyncio
+async def test_nebius_empty_content_raises_schema_validation_error() -> None:
+    """Verify that empty content without refusal or length raises SchemaValidationError."""
+    from app.core.errors import SchemaValidationError
+
+    provider = NebiusTokenFactoryProvider(
+        api_key="sk-test-mock",
+        model_id="nvidia/Nemotron-3_5-Lightning",
+        max_retries=0,
+    )
+    mock_choice = MagicMock()
+    mock_choice.message.content = ""
+    mock_choice.message.refusal = None
+    mock_choice.message.reasoning_content = None
+    mock_choice.finish_reason = "stop"
+
+    mock_resp = MagicMock()
+    mock_resp.choices = [mock_choice]
+    mock_resp.usage.completion_tokens = 0
+    mock_resp.usage.prompt_tokens = 20
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create = AsyncMock(return_value=mock_resp)
+
+    with patch.object(provider, "_get_client", return_value=mock_client):
+        with pytest.raises(SchemaValidationError) as exc_info:
+            await provider.generate_structured(
+                task_name="test_empty_content",
+                system_prompt="sys",
+                user_payload={"test": 1},
+                response_model=SimpleIncidentPayload,
+            )
+
+    assert "empty message content" in str(exc_info.value)
+    assert "finish_reason='stop'" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
 async def test_nebius_health_check_success_and_catalog() -> None:
     """Verify health check queries /v1/models and detects model availability."""
     secret_key = "nebius-key-health-test"
@@ -224,18 +428,24 @@ async def test_nebius_live_smoke_test() -> None:  # pragma: no cover
         api_key=settings.nebius_api_key,
         model_id=settings.nebius_model or "nvidia/Nemotron-3_5-Lightning",
         base_url=settings.nebius_base_url,
+        max_retries=0,
     )
 
-    # 1. Check health
-    health = await provider.health_check()
-    assert health["reachable"] is True, f"Nebius unreachable: {health.get('error')}"
-
-    # 2. Check structured inference
+    # Structured inference with reasoning disabled (single controlled request)
     res = await provider.generate_structured(
         task_name="live_smoke_test",
         system_prompt="You are a structured extraction engine. Return valid JSON only.",
         user_payload={"report": "Fire at manufacturing line halts production for 10 days"},
         response_model=SimpleIncidentPayload,
+        temperature=0.0,
+        max_tokens=512,
+        extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+        allow_fallback=False,
+    )
+    print(f"\n[NEBIUS_SMOKE_RESULT] {res.parsed_output.model_dump_json()}")
+    print(
+        f"[NEBIUS_SMOKE_USAGE] tokens_in={res.tokens_prompt} "
+        f"tokens_out={res.tokens_completion} elapsed_ms={res.elapsed_ms:.1f}"
     )
     assert isinstance(res.parsed_output, SimpleIncidentPayload)
     assert res.parsed_output.estimated_days > 0

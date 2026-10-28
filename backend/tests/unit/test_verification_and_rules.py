@@ -348,3 +348,60 @@ def test_policy_resolved_event_recommends_monitor_only() -> None:
     assert decision.recommendation == "monitor"
     assert "P-007" in decision.rule_ids_fired
     assert decision.human_review_required is False
+
+
+def test_quote_verification_exact_character_offsets_under_multiline_whitespace() -> None:
+    """Regression test: character offsets match the exact source slice."""
+    source = "Breaking News:\n\n\nFactory 4\t\t experienced  complete   production shutdown."
+    quote = "Factory 4 experienced complete production shutdown."
+    from app.pipeline.claim_validator import verify_quote_against_source
+
+    res = verify_quote_against_source(quote, source)
+    assert res.is_valid is True
+    assert res.status == "validated"
+    assert res.quote_start is not None and res.quote_end is not None
+    # Verify slice matches the actual multiline text in the original source
+    extracted_slice = source[res.quote_start : res.quote_end]
+    assert "Factory 4" in extracted_slice
+    assert "production shutdown." in extracted_slice
+
+
+def test_quote_relevance_heuristic() -> None:
+    """Verify quote relevance detection differentiates relevant quotes from unrelated text."""
+    from app.pipeline.claim_validator import check_quote_relevance
+
+    # Relevant quote
+    assert (
+        check_quote_relevance(
+            quote="Silicon Foundry Dresden suffered a fire at cleanroom facility 1.",
+            subject_text="Silicon Foundry Dresden",
+            object_text="cleanroom fire",
+        )
+        is True
+    )
+
+    # Completely unrelated quote from same article
+    assert (
+        check_quote_relevance(
+            quote="The weather in Berlin was unusually warm and sunny yesterday afternoon.",
+            subject_text="Silicon Foundry Dresden",
+            object_text="cleanroom fire disruption",
+        )
+        is False
+    )
+
+
+def test_quote_verification_typographical_quotes_and_dashes() -> None:
+    """Regression test: straight quotes and hyphens match curly quotes and em-dashes."""
+    source = "The official notice confirmed: “Fab-2 operations were suspended — repairs ongoing.”"
+    quote = 'The official notice confirmed: "Fab-2 operations were suspended - repairs ongoing."'
+    from app.pipeline.claim_validator import verify_quote_against_source
+
+    res = verify_quote_against_source(quote, source)
+    assert res.is_valid is True
+    assert res.status == "validated"
+    assert res.quote_start is not None and res.quote_end is not None
+    # Verify slice matches original source text with curly quotes and em-dash
+    matched_text = source[res.quote_start : res.quote_end]
+    assert "“Fab-2" in matched_text
+    assert "suspended — repairs" in matched_text

@@ -161,7 +161,8 @@ class DuckDuckGoContentProvider:
 
     @staticmethod
     def _is_safe_url(url: str) -> bool:
-        """SSRF protection: block loopback, private networks, and invalid schemes."""
+        """SSRF protection: block loopback, private networks, and cloud metadata."""
+        import ipaddress
         from urllib.parse import urlparse
 
         try:
@@ -171,17 +172,32 @@ class DuckDuckGoContentProvider:
             host = (parsed.hostname or "").lower()
             if not host:
                 return False
-            if host in ("localhost", "127.0.0.1", "0.0.0.0", "::1"):  # noqa: S104
+            if host in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "metadata", "instance-data"):  # noqa: S104
                 return False
             if host.endswith(".local") or host.endswith(".internal"):
                 return False
-            # Block private IP ranges
-            import ipaddress
-
+            if host in ("169.254.169.254", "metadata.google.internal"):
+                return False
+            # Block private, loopback, link-local, reserved, and multicast IP ranges
             try:
                 ip = ipaddress.ip_address(host)
-                if ip.is_private or ip.is_loopback or ip.is_link_local:
+                if (
+                    ip.is_private
+                    or ip.is_loopback
+                    or ip.is_link_local
+                    or ip.is_reserved
+                    or ip.is_multicast
+                ):
                     return False
+                if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+                    mapped = ip.ipv4_mapped
+                    if (
+                        mapped.is_private
+                        or mapped.is_loopback
+                        or mapped.is_link_local
+                        or mapped.is_reserved
+                    ):
+                        return False
             except ValueError:
                 pass  # It's a hostname, not an IP literal
             return True
@@ -251,20 +267,34 @@ class DuckDuckGoContentProvider:
 
         except Exception as exc:
             log.warning("public_page_fetch_failed", url=url, error=str(exc))
+            is_ssrf = "Blocked SSRF" in str(exc)
             return ContentResult(
                 url=url,
-                status="extraction_failed",
+                status="inaccessible" if is_ssrf else "extraction_failed",
                 text=None,
                 title=None,
-                error_message=str(exc)[:200],
+                error_message="Blocked: redirect to unsafe URL" if is_ssrf else str(exc)[:200],
             )
 
     async def extract(self, urls: list[str]) -> list[ContentResult]:
-        """Extract full text content for a list of URLs."""
+        """Extract full text content for a list of URLs with SSRF redirect protection."""
         if not urls:
             return []
 
-        async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=True) as client:
+        async def _check_redirect(response: httpx.Response) -> None:
+            if response.is_redirect:
+                loc = response.headers.get("Location")
+                if loc:
+                    target = str(response.url.join(loc))
+                    if not self._is_safe_url(target):
+                        msg = f"Blocked SSRF redirect to unsafe destination: {target}"
+                        raise httpx.RequestError(msg, request=response.request)
+
+        async with httpx.AsyncClient(
+            timeout=self._timeout,
+            follow_redirects=True,
+            event_hooks={"response": [_check_redirect]},
+        ) as client:
             tasks = [self.fetch_one(client, u) for u in urls]
             return await asyncio.gather(*tasks)
 
