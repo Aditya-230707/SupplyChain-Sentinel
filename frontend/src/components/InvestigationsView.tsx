@@ -34,8 +34,8 @@ export function InvestigationsView({
       {/* Page Title & Top Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', gap: '1rem', flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: '1.35rem', fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-            Investigations
+          <h1 className="page-heading">
+            Supplier Investigations
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', marginTop: '0.25rem' }}>
             Supplier incident investigations with verbatim quote verification and deterministic impact analysis.

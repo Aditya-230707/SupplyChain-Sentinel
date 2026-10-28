@@ -1,56 +1,62 @@
 /* SupplyChain Sentinel — Professional Enterprise Design System */
 
-:root {
-  color-scheme: dark;
 
-  /* Surfaces & Canvas */
-  --bg-app: #0b0d11;
-  --bg-surface: #12161f;
-  --bg-surface-elevated: #181d28;
-  --bg-surface-hover: #1f2533;
-  --bg-surface-active: #272e3f;
-  --bg-subtle: rgba(255, 255, 255, 0.03);
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg-app: #f5f5f0;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f8faf8;
+  --bg-surface-hover: #eef3ef;
+  --bg-surface-active: #dcebe3;
+  --bg-subtle: #f7f8f6;
 
   /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-base: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.2);
-  --border-focus: #3b82f6;
+  --border-subtle: #e6eae6;
+  --border-base: #d8dfd9;
+  --border-strong: #b8c6bc;
+  --border-focus: #43866a;
 
-  /* Text & Typography */
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-dim: #475569;
+  /* Text */
+  --text-primary: #172b26;
+  --text-secondary: #52665c;
+  --text-muted: #738078;
+  --text-dim: #87928b;
 
-  /* Action & Accent */
-  --accent: #3b82f6;
-  --accent-hover: #60a5fa;
-  --accent-subtle: rgba(59, 130, 246, 0.1);
-  --accent-border: rgba(59, 130, 246, 0.3);
+  /* Brand: forest green */
+  --accent: #174c3c;
+  --accent-hover: #103b2e;
+  --accent-subtle: #e6f1ea;
+  --accent-border: #bfd7c7;
 
-  /* Semantic Statuses */
-  --status-verified: #10b981;
-  --status-verified-bg: rgba(16, 185, 129, 0.1);
-  --status-verified-border: rgba(16, 185, 129, 0.25);
+  /* Verified evidence */
+  --status-verified: #23784f;
+  --status-verified-bg: #e6f4eb;
+  --status-verified-border: #b8dfc5;
 
-  --status-caution: #f59e0b;
-  --status-caution-bg: rgba(245, 158, 11, 0.1);
-  --status-caution-border: rgba(245, 158, 11, 0.25);
+  /* Needs review */
+  --status-caution: #81520a;
+  --status-caution-bg: #fff2d7;
+  --status-caution-border: #ecd39a;
 
-  --status-urgent: #ef4444;
-  --status-urgent-bg: rgba(239, 68, 68, 0.1);
-  --status-urgent-border: rgba(239, 68, 68, 0.25);
+  /* Critical risk or mismatched evidence */
+  --status-urgent: #b42318;
+  --status-urgent-bg: #fdebea;
+  --status-urgent-border: #f3c2be;
 
-  --status-neutral: #94a3b8;
-  --status-neutral-bg: rgba(148, 163, 184, 0.08);
-  --status-neutral-border: rgba(148, 163, 184, 0.18);
+  /* Neutral information */
+  --status-neutral: #586b61;
+  --status-neutral-bg: #f0f3f0;
+  --status-neutral-border: #dce3dd;
 
-  /* Typography Stack */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  /* Typography */
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
 
-  /* Layout & Geometry */
+  /* Geometry */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
@@ -58,6 +64,7 @@
   --sidebar-width: 240px;
   --topbar-height: 52px;
 }
+
 
 /* Reset & Foundation */
 *, *::before, *::after {
@@ -636,3 +643,111 @@ table.data-table tbody tr:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Light-theme refinements */
+html,
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--accent);
+}
+
+code {
+  background: #eef2ee;
+  color: #29473a;
+}
+
+.sidebar,
+.top-bar {
+  background: var(--bg-surface);
+  border-color: var(--border-subtle);
+}
+
+.sidebar-brand-icon {
+  background: var(--accent);
+  border-radius: 6px;
+}
+
+.nav-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.nav-item.active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.panel {
+  background: var(--bg-surface);
+  border-color: var(--border-subtle);
+}
+
+.panel-header {
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-subtle);
+}
+
+.btn-primary,
+.sidebar-primary-btn {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled),
+.sidebar-primary-btn:hover {
+  background: var(--accent-hover);
+}
+
+input,
+select,
+textarea {
+  color: var(--text-primary);
+  background: #ffffff;
+  border-color: var(--border-base);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+@media (max-width: 760px) {
+  .sidebar {
+    width: 190px;
+    min-width: 190px;
+  }
+
+  .content-viewport {
+    padding: 1rem;
+  }
+
+  .top-bar {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Page heading and table refinements */
+.page-heading {
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.data-table {
+  min-width: 760px;
+}
+
+.data-table tbody tr:hover {
+  background: #f7faf7;
+}
+
