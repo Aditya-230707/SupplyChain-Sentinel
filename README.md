@@ -174,10 +174,12 @@ NEBIUS_MODEL=nvidia/Nemotron-3_5-Lightning
 *(Alternative supported NVIDIA models: `nvidia/nemotron-3-super-120b-a12b`, `nvidia/Nemotron-3-Ultra-550b-a55b`, or any active model listed in `/v1/models` in your Nebius console).*
 
 ### Security & Fault-Tolerance Features
-- **Key Redaction:** The API key is stored securely in memory, never logged, and explicitly stripped from error messages if provider exceptions occur.
-- **Structured Output Fallback:** Attempts strict `json_schema` mode first, with automated resilience fallback to `json_object` mode if an endpoint lacks schema enforcement.
+- **Key Redaction:** The API key is stored strictly in memory, never logged, and explicitly stripped from structured logging and error messages.
+- **Thinking Mode Control:** Enforces `chat_template_kwargs={"enable_thinking": False}` for clean, latency-optimized structured extraction with `nvidia/Nemotron-3_5-Lightning`.
+- **Structured Output Resilience:** Uses OpenAI-compatible client with `response_format={"type": "json_object"}` and strict Pydantic model validation.
+- **Production Guard:** `APP_ENV=production` automatically enforces `LLM_PROVIDER=nebius` and fails fast if credentials or models are missing.
 - **Provider Health Check:** Tests connectivity against the `/v1/models` endpoint and verifies model catalog availability.
-- **Live Smoke Test:** Run `ALLOW_LIVE_SMOKE_TESTS=true NEBIUS_API_KEY=sk-... pytest backend/tests/unit/test_nebius_cloud.py` to verify real cloud inference.
+- **Live Cloud Smoke Test:** Set `ALLOW_LIVE_SMOKE_TESTS=true` and valid `NEBIUS_API_KEY` in `.env`, then run `pytest backend/tests/unit/test_nebius_cloud.py`.
 
 ---
 
@@ -246,20 +248,29 @@ Or run the automated unit test:
 Run all automated quality gates across backend and frontend:
 
 ```powershell
-# 1. Run all backend unit tests (125 passing tests)
-.\backend\.venv\Scripts\pytest -m "not slow"
+# 1. Run all backend unit tests (140 passing tests, 1 skipped)
+.\backend\.venv\Scripts\python.exe -m pytest backend/tests/unit -m "not slow" -q
 
-# 2. Run Ruff lint check
+# 2. Run Ruff lint check (clean across all 62 files)
 .\backend\.venv\Scripts\python.exe -m ruff check backend evaluation
 
 # 3. Run Ruff formatting check
 .\backend\.venv\Scripts\python.exe -m ruff format --check backend evaluation
 
-# 4. Run Frontend TypeScript check
+# 4. Run Frontend ESLint check (0 warnings, 0 errors)
+npm --prefix frontend run lint
+
+# 5. Run Frontend TypeScript typecheck
 npm --prefix frontend run typecheck
 
-# 5. Run Frontend production build
+# 6. Run Frontend production build
 npm --prefix frontend run build
+
+# 7. Run 12-stage offline E2E pipeline verification
+.\backend\.venv\Scripts\python.exe backend/scripts/validate_e2e_investigation.py
+
+# 8. Run 3-way comparative benchmark suite
+.\backend\.venv\Scripts\python.exe evaluation/runner.py
 ```
 
 ---
