@@ -10,7 +10,7 @@ SupplyChain Sentinel is an evidence-first supplier incident intelligence platfor
 4. **Range & Decision Loss Foundations:** Propagates duration uncertainty $[D_{\min}, D_{\max}] \to [\text{gap}_{\min}, \text{gap}_{\max}]$, models deterministic scenarios (Short, Baseline, Extended), and minimizes expected decision loss $\mathbb{E}[L(a)]$.
 5. **Bounded Next-Best-Investigation (VOI):** Proactively identifies unresolved evidence gaps and executes bounded follow-up inquiries ranked by transparent Heuristic Value of Information.
 6. **No Autonomous High-Impact Actions:** Recommendations require human review. No autonomous supplier suspension or ERP order mutation.
-7. **Provider Portability:** Standardized `LLMProvider` interface supports local `OllamaProvider` (development) and `NebiusTokenFactoryProvider` (cloud submission with NVIDIA open-source models).
+7. **Provider Portability:** Standardized `LLMProvider` interface supports production `NebiusTokenFactoryProvider` (cloud inference with NVIDIA open-weights foundation models) and deterministic `FakeLLMProvider` (offline testing).
 
 ## Component Architecture
 
@@ -24,7 +24,7 @@ FastAPI Modular Monolith (/api/v1)
   │     ├── Models: Suppliers, Parts, Facilities, Runs, Sources, Lineage
   │     └── Models: Claims, ClaimRelations, Incidents, Exposure, Policy, Reviews, Audit
   ├── Providers
-  │     ├── LLM: Ollama (dev: qwen3.5:9b), Nebius Token Factory (NVIDIA Nemotron), Fake (tests)
+  │     ├── LLM: Nebius Token Factory (NVIDIA Nemotron), Fake (offline tests)
   │     ├── Search: DuckDuckGo Live Search, Tavily Search adapter, Fixture Search
   │     └── Content: DuckDuckGo Content Extract, Tavily Extract adapter
   └── Decision Intelligence Pipeline

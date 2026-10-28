@@ -43,7 +43,7 @@ Enterprise supply chain teams are bombarded by breaking news, wire alerts, and s
                                          │
                                          ▼
                              [LLM Claim Extraction]
-                    (Nebius Token Factory / NVIDIA Nemotron / Ollama)
+                    (Nebius Token Factory / NVIDIA Nemotron)
                                          │
                                          ▼
                         [Deterministic Claim Validator]
@@ -181,22 +181,16 @@ NEBIUS_MODEL=nvidia/Nemotron-3_5-Lightning
 
 ---
 
-## 5. Local LLM: Ollama (`qwen3.5:9b`)
+## 5. Offline Testing: Deterministic Provider (`fake`)
 
-To run entirely locally with open-weights LLMs:
+For automated CI/CD and zero-dependency local testing without cloud credentials:
 
-1. Install [Ollama](https://ollama.ai/) and start the daemon.
-2. Pull the designated model:
-   ```powershell
-   ollama pull qwen3.5:9b
-   ```
-3. Set your `.env`:
+1. Set your `.env`:
    ```env
-   LLM_PROVIDER=ollama
-   OLLAMA_BASE_URL=http://localhost:11434
-   OLLAMA_MODEL=qwen3.5:9b
+   LLM_PROVIDER=fake
    ```
-4. Verify via health check: `GET http://localhost:8000/api/v1/health`
+2. The zero-network `FakeLLMProvider` deterministically simulates structured extraction for offline test suites, contract validation, and range-propagation benchmarks without incurring cloud API calls or network latency.
+3. For live incident intelligence and hackathon evaluation, set `LLM_PROVIDER=nebius` with your Nebius Token Factory credentials.
 
 ---
 

@@ -68,8 +68,8 @@ export function DiagnosticsModal({
               <span className="badge badge-verified">Configured</span>
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-              <div>Provider: <code>{providersHealth?.llm?.provider_name || 'ollama'}</code></div>
-              <div>Model ID: <code>{providersHealth?.llm?.model_id || 'qwen3.5:9b'}</code></div>
+              <div>Provider: <code>{providersHealth?.llm?.provider_name || 'nebius'}</code></div>
+              <div>Model ID: <code>{providersHealth?.llm?.model_id || 'nvidia/Nemotron-3_5-Lightning'}</code></div>
               <div>Status: {providersHealth?.llm?.reachable !== false ? 'Online & responsive' : 'Unreachable'}</div>
             </div>
           </div>

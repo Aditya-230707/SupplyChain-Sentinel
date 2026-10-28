@@ -32,7 +32,7 @@ All three defects identified during the initial release audit have been resolved
 | **Range Exposure Math ($[D_{\min}, D_{\max}]$)** | Decimal arithmetic tests (`test_exposure_engine.py`) | **VERIFIED** | Propagates bounds $[D_{\min}, D_{\max}] \to [\text{gap}_{\min}, \text{gap}_{\max}]$ with strict null safety. |
 | **Expected Decision Loss Minimization** | Unit tests (`test_exposure_engine.py`) | **VERIFIED** | Minimizes $\mathbb{E}[L(a)] = \text{cost}(a) + \sum P(s) \cdot \text{Loss}(a,s)$ under daily downtime costs. |
 | **Next-Best-Investigation VOI Loop** | Pipeline trace + Unit tests (`test_investigation_loop.py`) | **VERIFIED** | Evaluates 4 scenarios: useful evidence, irrelevant evidence, no new evidence, and contradictory evidence. |
-| **Local Ollama Integration (`qwen3.5:9b`)** | Live HTTP probe to `localhost:11434` + smoke test | **VERIFIED** | Daemon reachable, model installed, structured extraction smoke test passed in 151s. |
+| **Historical Ollama Baseline (`qwen3.5:9b`)** | Historical baseline probe | **DOCUMENTED** | Verified during Phase 5 baseline; Ollama provider subsequently retired for Nebius-only release. |
 | **Live DuckDuckGo Search & SSRF Guard** | Live search execution + SSRF blocking test | **VERIFIED** | Returns live news results; blocks `127.0.0.1`, `10.*`, and `192.168.*`. |
 | **Frontend Production Build & Telemetry UI** | `npm run typecheck`, `npm run lint`, `npm run build` | **VERIFIED** | Zero TypeScript or ESLint errors; production bundle built cleanly in 785ms. |
 | **Nebius Token Factory Adapter** | Adapter inspection + `test_nebius_cloud.py` | **VERIFIED** | Production-ready provider with quota backoff, 401 redaction, and `json_schema` fallback. Live cloud smoke test skipped offline when `NEBIUS_API_KEY` is not set. |
@@ -127,7 +127,7 @@ Benchmark Verification:   20/20 cases passed cleanly
 - [x] Working tree clean; no secrets, databases, or `.env` files tracked.
 - [x] Only one canonical branch exists (`main`); redundant branches removed.
 - [x] All 124 offline backend unit tests passing in $<5$ seconds.
-- [x] Local Ollama daemon running and verified with `qwen3.5:9b`.
+- [x] Historical Ollama baseline recorded (subsequently retired for Nebius-only release).
 - [x] Live search operational via DuckDuckGo with SSRF protection.
 - [x] Frontend TypeScript typecheck and production build passing with 0 warnings.
 - [x] Bipartite Evidence Graph DAG, Range Exposure, and VOI Trace exposed in UI.

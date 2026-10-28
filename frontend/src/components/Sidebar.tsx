@@ -112,7 +112,7 @@ export function Sidebar({
           <span>Inference</span>
           <span className="status-pill-indicator">
             <span className="status-dot" />
-            <span>{providersHealth?.llm?.model_id || 'qwen3.5:9b'}</span>
+            <span>{providersHealth?.llm?.model_id || 'nvidia/Nemotron-3_5-Lightning'}</span>
           </span>
         </div>
         <div className="status-row">

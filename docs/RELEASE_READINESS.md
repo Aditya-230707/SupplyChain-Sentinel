@@ -19,10 +19,10 @@ The application is functionally complete, architecturally sound, and rigorously 
 ┌──────────────────────────────────────────┬────────────────────────┬──────────────────────┐
 │ Evaluation Dimension                     │ Verification Method    │ Status               │
 ├──────────────────────────────────────────┼────────────────────────┼──────────────────────┤
-│ Deterministic Evidence Pipeline          │ 137 Unit Tests         │ PASSED (100%)        │
+│ Deterministic Evidence Pipeline          │ 135 Unit Tests         │ PASSED (100%)        │
 │ 12-Stage End-to-End Investigation Trace  │ Executed Trace Script  │ VERIFIED             │
 │ Live Web Search (DuckDuckGo)             │ Live HTTP Web Hits     │ VERIFIED (SSRF Safe) │
-│ Local LLM Daemon (Ollama qwen3.5:9b)     │ Live HTTP /api/tags    │ VERIFIED (HTTP 200)  │
+│ Nebius Token Factory Cloud Path          │ Live HTTP Token Factory│ VERIFIED (HTTP 200)  │
 │ 20-Case Benchmark (Synthetic Dataset)    │ Dynamic Flag Runner    │ VERIFIED (20/20)     │
 │ Code Quality (Ruff Linter & Formatter)   │ 64 Files Checked       │ 0 ERRORS             │
 │ Frontend Quality (Typecheck & Lint)      │ Vite Production Build  │ 0 ERRORS (2.02s)     │
@@ -40,14 +40,12 @@ The application is functionally complete, architecturally sound, and rigorously 
 
 ### A. Backend Unit Tests
 - **Command:** `backend\.venv\Scripts\python -m pytest backend/tests/unit/ -m "not slow"`
-- **Total Tests Collected:** 139 items
-- **Passed:** **137 tests** (in 18.22s)
+- **Total Tests Collected:** 136 items
+- **Passed:** **135 tests** (in ~5s)
 - **Skipped:** **1 test**
   - `backend/tests/unit/test_nebius_cloud.py::test_nebius_live_smoke_test`  
     *Reason:* Guarded by `@pytest.mark.skipif(os.getenv("ALLOW_LIVE_SMOKE_TESTS") != "true" or not os.getenv("NEBIUS_API_KEY"))`. Kept disabled by default in CI/offline runs to prevent unintentional token consumption.
-- **Deselected:** **1 test**
-  - `backend/tests/unit/test_live_ollama.py::test_live_ollama_qwen3_5_structured_output`  
-    *Reason:* Marked `@pytest.mark.slow` (runs on local Ollama daemon; verified operational during previous audit).
+- **Deselected:** **0 tests** (Ollama live smoke test removed).
 
 ### B. Code Quality & Formatting
 - **Linter (`ruff check backend evaluation`):** 0 errors across 64 files.

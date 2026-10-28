@@ -433,7 +433,7 @@ def run_evaluation(
             "Offline VOI follow-up evidence executes through live pipeline modules "
             "(claim_validator, entity_resolution, source_lineage, evidence_graph, "
             "exposure_calculator, policy_engine) over versioned deterministic fixture claims. "
-            "Production investigation loop uses live search and Ollama/Nebius providers."
+            "Production investigation loop uses live search and Nebius Token Factory provider."
         ),
         "systems_compared": [
             "baseline_unstructured_llm",

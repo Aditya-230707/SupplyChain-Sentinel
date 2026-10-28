@@ -1,8 +1,9 @@
 """
-Application configuration — validated at startup via pydantic-settings.
+Application configuration via pydantic-settings.
 
-All values come from environment variables or a .env file.
-No credentials are ever logged or exposed via API endpoints.
+All settings read from environment variables or .env file.
+Secrets (APP_SECRET_KEY, NEBIUS_API_KEY, TAVILY_API_KEY) are never given
+unsafe defaults in production.
 """
 
 from __future__ import annotations
@@ -15,22 +16,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Validated application settings.
-
-    Required values raise a ValidationError at startup if absent or malformed.
-    Optional provider credentials are NOT required to start the application;
-    they are validated only when the respective provider is actually invoked.
-    """
-
     model_config = SettingsConfigDict(
-        env_file=(".env", "backend/.env"),
+        env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=False,
         extra="ignore",
+        case_sensitive=False,
     )
 
     # ---- Application -----------------------------------------
-    app_env: Literal["development", "production", "test"] = "development"
+    app_name: str = "SupplyChain Sentinel"
+    app_env: Literal["development", "test", "production"] = "development"
     app_secret_key: str = "change-me-to-a-random-32-char-string"
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     request_id_header: str = "X-Request-ID"
@@ -39,11 +34,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./sentinel.db"
 
     # ---- LLM Provider ----------------------------------------
-    llm_provider: Literal["ollama", "nebius", "fake"] = "fake"
-
-    # Ollama (optional until actually used)
-    ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "qwen3.5:9b"
+    llm_provider: Literal["nebius", "fake"] = "fake"
 
     # Nebius Token Factory (optional until actually used)
     nebius_api_key: str = ""
@@ -81,6 +72,16 @@ class Settings(BaseSettings):
         return v
 
     @model_validator(mode="after")
+    def production_requires_nebius_provider(self) -> Settings:
+        if self.app_env == "production" and self.llm_provider != "nebius":
+            msg = (
+                f"LLM_PROVIDER must be 'nebius' in production; got {self.llm_provider!r}. "
+                "FakeLLMProvider is strictly restricted to development and offline tests."
+            )
+            raise ValueError(msg)
+        return self
+
+    @model_validator(mode="after")
     def nebius_model_required_when_provider_is_nebius(self) -> Settings:
         if self.llm_provider == "nebius":
             if not self.nebius_api_key:
@@ -94,19 +95,11 @@ class Settings(BaseSettings):
                 raise ValueError(msg)
         return self
 
-    @model_validator(mode="after")
-    def ollama_model_required_when_provider_is_ollama(self) -> Settings:
-        if self.llm_provider == "ollama" and not self.ollama_model:
-            msg = "OLLAMA_MODEL is required when LLM_PROVIDER=ollama"
-            raise ValueError(msg)
-        return self
-
     def safe_log_dict(self) -> dict[str, object]:
         """Return a settings dict safe for structured logging (no secrets)."""
         return {
             "app_env": self.app_env,
             "llm_provider": self.llm_provider,
-            "ollama_model": self.ollama_model if self.llm_provider == "ollama" else None,
             "nebius_model": self.nebius_model if self.llm_provider == "nebius" else None,
             "database_url_scheme": self.database_url.split("://")[0],
             "tavily_configured": bool(self.tavily_api_key),

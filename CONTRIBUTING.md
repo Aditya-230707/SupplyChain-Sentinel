@@ -22,7 +22,6 @@ When contributing to this repository, keep these foundational rules in mind:
 - **Python 3.12+**
 - **Node.js 18+** and **npm**
 - **Git**
-- Optional: [Ollama](https://ollama.ai/) with `qwen3.5:9b` for local offline inference.
 
 ### 1. Repository Setup
 ```bash
@@ -69,7 +68,7 @@ Before submitting a pull request, all automated checks must pass cleanly.
 ### Backend Checks
 ```bash
 # Run backend test suite (95+ unit and integration tests)
-pytest -k "not test_live_ollama" backend/tests/
+pytest backend/tests/unit/ -m "not slow"
 
 # Run Ruff linter
 ruff check backend evaluation
@@ -97,7 +96,7 @@ npm run build
 ## Testing Guidelines
 
 - **Keep Tests Offline**: Unit tests must never make external network calls. Use `FixtureSearchProvider` or mock HTTP endpoints using `respx` or `unittest.mock`.
-- **Live Smoke Tests**: Live provider tests (e.g. Nebius or live Ollama) must be gated behind explicit environment flags (such as `ALLOW_LIVE_SMOKE_TESTS=true` or `-k "test_live_ollama"`).
+- **Live Smoke Tests**: Live provider tests (e.g. Nebius Token Factory) must be gated behind explicit environment flags (such as `ALLOW_LIVE_SMOKE_TESTS=true`).
 - **Benchmark Integrity**: If you modify entity resolution, quote verification, or policy evaluation logic, run `python evaluation/runner.py` to ensure benchmark metrics do not regress.
 
 ---

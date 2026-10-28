@@ -6,7 +6,7 @@ Verifies:
 - Provider selection is validated
 - Secrets are not exposed in safe_log_dict
 - Nebius validation fires only when provider=nebius
-- Ollama validation fires only when provider=ollama
+- Generic invalid provider names are rejected
 """
 
 from __future__ import annotations
@@ -82,21 +82,6 @@ def test_nebius_provider_valid_when_both_set() -> None:
     assert s.llm_provider == "nebius"
 
 
-def test_ollama_provider_requires_model() -> None:
-    """LLM_PROVIDER=ollama without OLLAMA_MODEL must raise."""
-    from app.core.config import Settings
-
-    with pytest.raises(ValidationError, match="OLLAMA_MODEL"):
-        Settings(llm_provider="ollama", ollama_model="")
-
-
-def test_ollama_provider_valid_with_model() -> None:
-    from app.core.config import Settings
-
-    s = Settings(llm_provider="ollama", ollama_model="qwen3.5:9b")
-    assert s.ollama_model == "qwen3.5:9b"
-
-
 def test_fake_provider_requires_no_keys() -> None:
     """fake provider: no API keys needed — startup must succeed."""
     from app.core.config import Settings
@@ -135,3 +120,68 @@ def test_invalid_provider_name_raises() -> None:
 
     with pytest.raises(ValidationError):
         Settings(llm_provider="anthropic")  # not in Literal
+
+
+def test_production_accepts_nebius_with_required_settings() -> None:
+    """APP_ENV=production accepts LLM_PROVIDER=nebius when key and model are set."""
+    from app.core.config import Settings
+
+    s = Settings(
+        app_env="production",
+        app_secret_key="a" * 32,
+        llm_provider="nebius",
+        nebius_api_key="sk-live-nebius-key",
+        nebius_model="nvidia/Nemotron-3_5-Lightning",
+    )
+    assert s.app_env == "production"
+    assert s.llm_provider == "nebius"
+
+
+def test_production_rejects_fake_provider() -> None:
+    """APP_ENV=production explicitly rejects LLM_PROVIDER=fake."""
+    from app.core.config import Settings
+
+    with pytest.raises(ValidationError, match="LLM_PROVIDER must be 'nebius' in production"):
+        Settings(
+            app_env="production",
+            app_secret_key="a" * 32,
+            llm_provider="fake",
+        )
+
+
+def test_production_rejects_omitted_provider_defaulting_to_fake() -> None:
+    """APP_ENV=production rejects omitted LLM_PROVIDER because it defaults to fake."""
+    from app.core.config import Settings
+
+    with pytest.raises(ValidationError, match="LLM_PROVIDER must be 'nebius' in production"):
+        Settings(
+            app_env="production",
+            app_secret_key="a" * 32,
+        )
+
+
+def test_development_and_test_environments_allow_fake() -> None:
+    """Development and test environments can safely default to or use fake provider."""
+    from app.core.config import Settings
+
+    dev_settings = Settings(app_env="development", llm_provider="fake")
+    assert dev_settings.llm_provider == "fake"
+
+    test_settings = Settings(app_env="test", llm_provider="fake")
+    assert test_settings.llm_provider == "fake"
+
+
+def test_validation_errors_never_expose_api_key() -> None:
+    """Validation errors must never expose secret API key values in the exception message."""
+    from app.core.config import Settings
+
+    secret_key = "super-secret-raw-token-12345"
+    with pytest.raises(ValidationError) as exc_info:
+        Settings(
+            app_env="production",
+            app_secret_key="a" * 32,
+            llm_provider="nebius",
+            nebius_api_key=secret_key,
+            nebius_model="",  # triggers NEBIUS_MODEL error
+        )
+    assert secret_key not in str(exc_info.value)

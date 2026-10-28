@@ -58,8 +58,7 @@ SupplyChain Sentinel implements an **evidence-first, deterministic intelligence 
 
 SupplyChain Sentinel is engineered with a clean provider abstraction (`app/providers/llm_base.py`) supporting:
 1. **Nebius Token Factory Cloud Path:** Connects to `https://api.tokenfactory.nebius.com/v1/` using NVIDIA foundation models (`nvidia/Nemotron-3_5-Lightning`, `nvidia/nemotron-3-super-120b-a12b`, `nvidia/Nemotron-3-Ultra-550b-a55b`).
-2. **Local Development Path:** Ollama with `qwen3.5:9b`.
-3. **Deterministic Fixture Path:** Zero-network fake provider for deterministic testing.
+2. **Deterministic Offline Path:** Zero-network fake provider (`FakeLLMProvider`) for deterministic testing and automated evaluation.
 
 ### Cloud Architecture & Resilience Features
 - **Key Redaction:** `NebiusTokenFactoryProvider` explicitly redacts API credentials from all exception strings and health check responses.

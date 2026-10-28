@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 from decimal import Decimal
 from pathlib import Path
@@ -27,6 +28,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
+
+# Default to fake provider for deterministic offline validation
+os.environ.setdefault("LLM_PROVIDER", "fake")
 
 
 from app.db.models import (

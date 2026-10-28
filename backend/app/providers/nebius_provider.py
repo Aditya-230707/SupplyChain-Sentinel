@@ -299,11 +299,16 @@ class NebiusTokenFactoryProvider:
         return result
 
 
-def make_nebius_provider_from_settings() -> NebiusTokenFactoryProvider:
+def make_nebius_provider_from_settings(
+    settings: Any | None = None,
+) -> NebiusTokenFactoryProvider:
     """Construct NebiusTokenFactoryProvider from application settings."""
-    from app.core.config import get_settings
+    if settings is None:
+        from app.core.config import get_settings
 
-    s = get_settings()
+        s = get_settings()
+    else:
+        s = settings
     return NebiusTokenFactoryProvider(
         api_key=s.nebius_api_key,
         model_id=s.nebius_model,

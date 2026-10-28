@@ -3,7 +3,7 @@
   "dataset_version": "1.0",
   "total_cases": 20,
   "evaluation_mode": "deterministic_offline_simulation",
-  "simulation_notes": "Offline VOI follow-up evidence executes through live pipeline modules (claim_validator, entity_resolution, source_lineage, evidence_graph, exposure_calculator, policy_engine) over versioned deterministic fixture claims. Production investigation loop uses live search and Ollama/Nebius providers.",
+  "simulation_notes": "Offline VOI follow-up evidence executes through live pipeline modules (claim_validator, entity_resolution, source_lineage, evidence_graph, exposure_calculator, policy_engine) over versioned deterministic fixture claims. Production investigation loop uses live search and Nebius Token Factory provider.",
   "systems_compared": [
     "baseline_unstructured_llm",
     "sentinel_1shot_deterministic",

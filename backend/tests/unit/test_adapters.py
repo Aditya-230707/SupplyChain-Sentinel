@@ -4,7 +4,7 @@ Unit tests for external provider adapters with mocked network/SDK responses.
 Covers:
 - TavilySearchProvider & TavilyContentProvider (401, 429, timeout, result mapping)
 - NebiusTokenFactoryProvider (auth error, quota error, JSON mode fallback, secret redaction)
-- OllamaProvider (health check, model availability, error handling)
+- Provider factory routing and rejection of unsupported providers
 - No live external network calls in any of these tests
 """
 
@@ -22,7 +22,6 @@ from app.core.errors import (
     SchemaValidationError,
 )
 from app.providers.nebius_provider import NebiusTokenFactoryProvider
-from app.providers.ollama_provider import OllamaProvider
 from app.providers.tavily_provider import (
     TavilyContentProvider,
     TavilySearchProvider,
@@ -161,41 +160,36 @@ async def test_nebius_schema_mismatch_raises_schema_validation_error() -> None:
             )
 
 
-# ---- Ollama Adapter -----------------------------------------
+# ---- Provider Factory Dispatch -----------------------------
 
 
-@pytest.mark.asyncio
-async def test_ollama_health_check_detects_available_model() -> None:
-    provider = OllamaProvider(base_url="http://localhost:11434", model="qwen3.5:9b")
+def test_provider_factory_returns_nebius() -> None:
+    from app.core.config import Settings
+    from app.providers.factory import get_llm_provider
+    from app.providers.nebius_provider import NebiusTokenFactoryProvider
 
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = {"models": [{"name": "qwen3.5:9b"}, {"name": "llama3.2:3b"}]}
-
-    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = mock_resp
-        health = await provider.health_check()
-
-    assert health["reachable"] is True
-    assert health["model_available"] is True
-    assert health["error"] is None
+    mock_settings = Settings(
+        llm_provider="nebius",
+        nebius_api_key="sk-test-key",
+        nebius_model="nvidia/Nemotron-3_5-Lightning",
+    )
+    with patch("app.providers.factory.get_settings", return_value=mock_settings):
+        provider = get_llm_provider()
+    assert isinstance(provider, NebiusTokenFactoryProvider)
+    assert provider.model_id == "nvidia/Nemotron-3_5-Lightning"
 
 
-@pytest.mark.asyncio
-async def test_ollama_health_check_flags_missing_model() -> None:
-    provider = OllamaProvider(base_url="http://localhost:11434", model="nonexistent:model")
+def test_provider_factory_rejects_unknown_provider() -> None:
+    from app.core.config import Settings
+    from app.providers.factory import get_llm_provider
 
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = {"models": [{"name": "qwen3.5:9b"}]}
+    # Bypass Pydantic validation via object mock to test factory defense-in-depth
+    mock_settings = MagicMock(spec=Settings)
+    mock_settings.llm_provider = "unsupported_provider"
 
-    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = mock_resp
-        health = await provider.health_check()
-
-    assert health["reachable"] is True
-    assert health["model_available"] is False
-    assert "not found" in str(health["error"])
+    with patch("app.providers.factory.get_settings", return_value=mock_settings):
+        with pytest.raises(ValueError, match="Unknown LLM_PROVIDER"):
+            get_llm_provider()
 
 
 # ---- DuckDuckGo Adapters ------------------------------------
