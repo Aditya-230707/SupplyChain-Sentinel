@@ -23,7 +23,7 @@ from app.api.routes_suppliers import router as suppliers_router
 from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
-from app.db.session import init_db
+from app.db.session import close_db, init_db
 
 
 @asynccontextmanager
@@ -45,6 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     yield
 
+    await close_db()
     log.info("sentinel_shutdown")
 
 

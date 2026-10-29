@@ -7,10 +7,12 @@ This document specifies the exact mathematical formulas, eligibility criteria, n
 
 ## 1. Evaluation Methodology & Disclaimers
 
-### A. Systems Evaluated
-1. **Baseline LLM (Ungrounded Prompting):** Curated, deterministic pre-recorded evaluations representing raw prompt completion without deterministic quote verification, syndicated wire clustering, or null-safe exposure arithmetic.
+### A. Systems Evaluated & Evaluation Scope
+1. **Reference Baseline (Unconstrained Mock):** Hand-curated heuristic simulation capturing typical failure modes of raw ungrounded prompting (lack of wire clustering, premature panic, quote hallucination, unverified entity matching). It is a fixed reference baseline across these 20 edge cases, not a live parallel model invocation.
 2. **SupplyChain Sentinel (1-Shot Deterministic):** Executes exact quote verification (Rule E-005), syndicated news-wire clustering (Rules E-001–E-003), multi-signal entity resolution (Rules ID-001–ID-005), bounded range exposure math, and deterministic policy rulebook (Rules P-001–P-010).
 3. **SupplyChain Sentinel + Bounded Next-Best-Investigation (VOI Loop):** Executes the bounded investigation loop to identify evidentiary gaps, prioritize targeted follow-up queries, verify follow-up quotes and entities through live pipeline modules, detect claim-to-claim contradictions (Rule CR-001), and update policy recommendations.
+
+> **Evaluation Scope Disclaimer:** This benchmark is an offline unit challenge set of 20 versioned, curated scenarios designed to stress-test explicit algorithmic failure modes and boundary conditions. It does not measure statistical accuracy across broad in-the-wild web reporting or production-scale ERP telemetry. Small denominators for specific edge-case tags (e.g. wire deduplication $N=2$, critical incidents $N=3$) reflect targeted unit tests of specific deterministic rules rather than population-level statistical samples.
 
 ### B. Heuristic VOI vs. Formal Bayesian EVOI
 The production prioritization score implemented in `app/pipeline/investigation_loop.py` is a **transparent heuristic prioritization index**, defined as:

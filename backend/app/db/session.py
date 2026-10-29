@@ -56,6 +56,16 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     return _session_factory
 
 
+async def close_db() -> None:
+    """Close the async engine connections cleanly."""
+    global _engine, _session_factory
+    if _engine is not None:
+        await _engine.dispose()
+        _engine = None
+        _session_factory = None
+    log.info("db_engine_closed")
+
+
 async def init_db() -> None:
     """Create all tables if they do not exist.
 

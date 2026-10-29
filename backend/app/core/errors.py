@@ -86,6 +86,16 @@ class ProviderQuotaError(ProviderError):
     status_code = status.HTTP_429_TOO_MANY_REQUESTS
     code = "provider_quota_exceeded"
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        retry_after: float | None = None,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message, details=details)
+        self.retry_after = retry_after
+
 
 class SchemaValidationError(SentinelError):
     """LLM output did not pass Pydantic/schema validation."""

@@ -172,6 +172,31 @@ def analyze_source_lineage(sources: list[SourceCandidate]) -> LineageAnalysisRes
                 union(s_a.id, s_b.id)
                 continue
 
+            # 5. Shared syndicated wire citation in body
+            # (one article cites wire agency originating the other)
+            if orig_a and s_b.publisher_name and orig_a in s_b.publisher_name.lower():
+                relations.append(
+                    LineageRelation(
+                        source_a_id=s_a.id,
+                        source_b_id=s_b.id,
+                        relation="syndicated",
+                        evidence={"rule": "E-003", "shared_origin": orig_a},
+                    )
+                )
+                union(s_a.id, s_b.id)
+                continue
+            if orig_b and s_a.publisher_name and orig_b in s_a.publisher_name.lower():
+                relations.append(
+                    LineageRelation(
+                        source_a_id=s_a.id,
+                        source_b_id=s_b.id,
+                        relation="syndicated",
+                        evidence={"rule": "E-003", "shared_origin": orig_b},
+                    )
+                )
+                union(s_a.id, s_b.id)
+                continue
+
     # Build groups
     groups_dict: dict[str, list[str]] = {}
     for s in sources:

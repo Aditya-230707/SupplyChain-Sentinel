@@ -214,22 +214,24 @@ For enterprise-grade curated search feeds:
 
 ## 7. Evaluation Benchmark: 3-Way Comparative Results
 
-Sentinel features a 20-case versioned benchmark dataset ([`evaluation/benchmark_dataset_v1.json`](evaluation/benchmark_dataset_v1.json)) and runner ([`evaluation/runner.py`](evaluation/runner.py)) evaluating 3 distinct paradigms:
-1. **Baseline LLM Summarizer:** Prompted unstructured LLM with naive sentiment/escalation.
+Sentinel features a 20-case versioned challenge benchmark dataset ([`evaluation/benchmark_dataset_v1.json`](evaluation/benchmark_dataset_v1.json)) and runner ([`evaluation/runner.py`](evaluation/runner.py)) evaluating 3 distinct paradigms across boundary failure modes:
+1. **Reference Baseline:** Fixed reference simulation capturing typical failure modes of raw ungrounded LLMs (lack of wire deduplication, premature panic on negative keywords, quote hallucination).
 2. **SupplyChain Sentinel (1-Shot Deterministic):** Exact quote validation, lineage clustering, entity/facility resolution, range exposure math, and policy rulebook.
 3. **SupplyChain Sentinel + Bounded Next-Best-Investigation (VOI):** Bounded inquiry loop that closes evidence gaps, quantifies missing durations, and resolves unverified single sources.
 
+> **Evaluation Methodology & Limitations:** These 20 cases are curated, deterministic challenge scenarios designed to test specific edge-case rules (e.g., exact quote substring matching, corporate homonyms, non-impacting facility damage). Sub-denominators for specific flags reflect targeted boundary tests (e.g., $N=2$ for wire deduplication, $N=3$ for critical incidents, $N=2$ for VOI gap resolution) rather than general statistical sampling across all supply chains. See [`docs/METRIC_DEFINITIONS.md`](docs/METRIC_DEFINITIONS.md) for full mathematical definitions and disclaimers.
+
 ### Benchmark Results (`evaluation/evaluation_results.json`)
 
-| Metric | Denominator | Baseline LLM | Sentinel 1-Shot | Sentinel + VOI Loop | Description |
+| Metric | Eligible Denominator | Reference Baseline | Sentinel 1-Shot | Sentinel + VOI Loop | Target Algorithmic Guarantee |
 |---|---|:---:|:---:|:---:|---|
-| **Supplier Attribution Accuracy** | 20 total benchmark cases | 85.0% | **95.0%** | **95.0%** | Multi-signal entity & facility resolution vs naive keyword matching |
-| **Supporting Quote Validity** | 20 total extracted claims | 90.0% | **100.0%** | **100.0%** | Mathematically verified exact substring matches against source |
-| **Duplicate Wire Handling** | 2 syndicated wire cases | 0.0% | **100.0%** | **100.0%** | Accurate clustering of syndicated news wires preventing inflated confidence |
-| **False Escalation Rate** | 17 non-escalatable cases | 94.1% | **0.0%** | **0.0%** | Non-critical, irrelevant, or misattributed cases wrongly escalated |
-| **Critical Incident Recall** | 3 genuine critical cases | 100.0% | **100.0%** | **100.0%** | Recall of genuine critical disruptions requiring procurement intervention |
-| **Uncertainty Handling Precision** | 3 missing/ambiguous data cases | 0.0% | **100.0%** | **100.0%** | Correct preservation of nulls and refusal to hallucinate risk |
-| **VOI Decision Change Efficiency** | 2 unresolved gap cases | 0.0% | 0.0% | **100.0%** | Directional accuracy and information gain achieved by targeted follow-up inquiries |
+| **Supplier Attribution Accuracy** | $N=20$ benchmark cases | 85.0% | **95.0%** | **95.0%** | Multi-signal entity & facility resolution vs naive keyword matching |
+| **Supporting Quote Validity** | $N=20$ extracted claims | 90.0% | **100.0%** | **100.0%** | Mathematically verified exact substring matches against source |
+| **Duplicate Wire Handling** | $N=2$ syndicated wire cases | 0.0% | **100.0%** | **100.0%** | Accurate clustering of syndicated news wires preventing inflated confidence |
+| **False Escalation Rate** | $N=17$ non-escalatable cases | 94.1% | **0.0%** | **0.0%** | Non-critical, irrelevant, or misattributed cases wrongly escalated |
+| **Critical Incident Recall** | $N=3$ genuine critical cases | 100.0% | **100.0%** | **100.0%** | Recall of genuine critical disruptions requiring procurement intervention |
+| **Uncertainty Handling Precision** | $N=3$ missing/ambiguous data cases | 0.0% | **100.0%** | **100.0%** | Correct preservation of nulls and refusal to hallucinate risk |
+| **VOI Decision Change Efficiency** | $N=2$ unresolved gap cases | 0.0% | 0.0% | **100.0%** | Directional accuracy and information gain achieved by targeted follow-up inquiries |
 
 ### Reproducing the Benchmark
 Run the standalone 3-way evaluation runner:
@@ -248,10 +250,10 @@ Or run the automated unit test:
 Run all automated quality gates across backend and frontend:
 
 ```powershell
-# 1. Run all backend unit tests (140 passing tests, 1 skipped)
+# 1. Run all backend unit tests (145 passing tests, 1 skipped)
 .\backend\.venv\Scripts\python.exe -m pytest backend/tests/unit -m "not slow" -q
 
-# 2. Run Ruff lint check (clean across all 62 files)
+# 2. Run Ruff lint check (clean across all files)
 .\backend\.venv\Scripts\python.exe -m ruff check backend evaluation
 
 # 3. Run Ruff formatting check
@@ -275,12 +277,24 @@ npm --prefix frontend run build
 
 ---
 
-## 9. Hackathon Submission Package
+## 9. Known Scope & Operational Limitations
 
-For complete details on the architecture, developer feedback on Nebius Token Factory and NVIDIA models, and video demonstration storyboards, see [`docs/SUBMISSION.md`](docs/SUBMISSION.md).
+1. **Curated Benchmark Scope:** Evaluated on 20 edge-case boundary scenarios. While rigorous for testing rule triggers and quote integrity, it does not represent an empirical survey of global news corpora.
+2. **Public News Visibility:** Relies on indexed public news and statements via DuckDuckGo and Tavily. Proprietary tier-2/tier-3 sub-tier disruptions not reported in public media require internal buyer notifications.
+3. **Enterprise ERP Sync:** Current master data uses local relational records. Live enterprise production requires bidirectional integration with SAP S/4HANA or Oracle Cloud SCM.
+4. **Heuristic Lineage Clustering:** Lineage clustering groups canonical URLs, content hashes, and syndicated wire citations. Highly paraphrased or completely rewritten derivative reporting without wire citations may evade heuristic detection.
+5. **Human-in-the-Loop Requirement:** Consequential procurement decisions (order redirection, dual-sourcing invocation) require human review through the Decision Gate.
 
 ---
 
-## 10. License
+## 10. Hackathon Submission Package
+
+For complete details on the architecture, developer feedback on Nebius Token Factory and NVIDIA models, and video demonstration storyboards, see [`docs/SUBMISSION.md`](docs/SUBMISSION.md).
+
+*(Note: The demonstration video is recorded and linked directly on the Devpost submission page).*
+
+---
+
+## 11. License
 
 MIT License — see [LICENSE](LICENSE) for details.

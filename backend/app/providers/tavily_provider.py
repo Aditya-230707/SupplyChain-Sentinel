@@ -38,13 +38,15 @@ class TavilySearchProvider:
         *,
         max_results: int | None = None,
         search_depth: str | None = None,
+        include_domains: list[str] | None = None,
+        exclude_domains: list[str] | None = None,
     ) -> SearchResponse:
         import httpx
 
         n = max_results or self._max_results
         depth = search_depth or self._search_depth
 
-        payload = {
+        payload: dict[str, object] = {
             "api_key": self._api_key,
             "query": query,
             "max_results": n,
@@ -52,6 +54,10 @@ class TavilySearchProvider:
             "include_raw_content": False,
             "include_answer": False,  # Do not use synthesized answer as evidence
         }
+        if include_domains:
+            payload["include_domains"] = include_domains
+        if exclude_domains:
+            payload["exclude_domains"] = exclude_domains
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:

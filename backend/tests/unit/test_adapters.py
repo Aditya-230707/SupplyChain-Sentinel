@@ -56,12 +56,19 @@ async def test_tavily_search_success_mapping() -> None:
 
     with patch("httpx.AsyncClient.post", new_callable=AsyncMock) as mock_post:
         mock_post.return_value = mock_resp
-        resp = await provider.search("supplier incident")
+        resp = await provider.search(
+            "supplier incident",
+            include_domains=["reuters.com"],
+            exclude_domains=["spam.com"],
+        )
 
     assert resp.status == "ok"
     assert len(resp.results) == 1
     assert resp.results[0].title == "Incident at supplier"
     assert resp.results[0].domain == "example.com"
+    call_payload = mock_post.call_args.kwargs["json"]
+    assert call_payload["include_domains"] == ["reuters.com"]
+    assert call_payload["exclude_domains"] == ["spam.com"]
 
 
 @pytest.mark.asyncio

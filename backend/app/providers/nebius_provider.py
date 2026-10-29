@@ -174,7 +174,18 @@ class NebiusTokenFactoryProvider:
                         f"Nebius auth error (key redacted): {err_str[:100]}"
                     ) from exc
                 if "429" in err_str:
-                    raise ProviderQuotaError(f"Nebius quota exceeded: {err_str[:100]}") from exc
+                    retry_after_val: float | None = None
+                    response_obj = getattr(exc, "response", None)
+                    headers = getattr(response_obj, "headers", None) if response_obj else None
+                    if headers and "retry-after" in headers:
+                        try:
+                            retry_after_val = float(headers["retry-after"])
+                        except (ValueError, TypeError):
+                            pass
+                    raise ProviderQuotaError(
+                        f"Nebius quota exceeded: {err_str[:100]}",
+                        retry_after=retry_after_val,
+                    ) from exc
                 retry_count += 1
                 raise ProviderError(f"Nebius provider error: {err_str[:200]}") from exc
 

@@ -45,6 +45,7 @@ async def client() -> AsyncClient:
         # Trigger lifespan startup (creates tables)
         async with test_app.router.lifespan_context(test_app):
             yield ac
+        await session_module.close_db()
 
 
 @pytest.mark.asyncio
@@ -98,6 +99,15 @@ async def test_openapi_schema_loads(client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_root_serves_frontend_when_dist_present(client: AsyncClient) -> None:
+    from pathlib import Path
+
+    dist_index = (
+        Path(__file__).resolve().parent.parent.parent.parent / "frontend" / "dist" / "index.html"
+    )
     resp = await client.get("/")
-    assert resp.status_code == 200
-    assert "SupplyChain Sentinel" in resp.text
+    if dist_index.exists():
+        assert resp.status_code == 200
+        assert "SupplyChain Sentinel" in resp.text
+    else:
+        # In CI or fresh clone without frontend build, root returns 404
+        assert resp.status_code == 404

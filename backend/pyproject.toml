@@ -93,6 +93,7 @@ indent-style = "space"
 # ---- pytest ------------------------------------------------
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 pythonpath = [".", ".."]
 python_files = ["test_*.py"]
@@ -102,4 +103,9 @@ log_cli = true
 log_cli_level = "WARNING"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+filterwarnings = [
+    "ignore::pytest.PytestUnhandledThreadExceptionWarning",
+    "ignore::ResourceWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning",
 ]
