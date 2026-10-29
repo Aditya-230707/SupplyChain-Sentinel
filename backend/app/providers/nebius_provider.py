@@ -69,9 +69,7 @@ class NebiusTokenFactoryProvider:
         self._max_retries = max_retries
         self.allow_fallback = allow_fallback
         self._client: Any = None
-        self.default_extra_body: dict[str, Any] = {
-            "chat_template_kwargs": {"enable_thinking": False}
-        }
+        self.default_extra_body: dict[str, Any] = {}
 
     def _get_client(self) -> Any:
         if self._client is None:

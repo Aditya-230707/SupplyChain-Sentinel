@@ -19,6 +19,7 @@ VALID_CATEGORIES = frozenset(
 
 InvestigationStatus = Literal[
     "queued",
+    "pending",
     "searching",
     "extracting",
     "resolving",
