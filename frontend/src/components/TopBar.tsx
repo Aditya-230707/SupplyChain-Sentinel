@@ -19,9 +19,14 @@ export function TopBar({
 }: TopBarProps) {
   return (
     <header className="top-bar">
-      <div className="breadcrumbs">
+      <div className="breadcrumbs" style={{ display: 'flex', alignItems: 'center' }}>
+        <img
+          src="/logo.png"
+          alt="Sentinel Logo"
+          style={{ width: '22px', height: '22px', objectFit: 'contain', marginRight: '6px' }}
+        />
         <span>Sentinel</span>
-        <span>/</span>
+        <span style={{ marginLeft: '4px' }}>/</span>
 
         {activeTab === 'investigations' && (
           <span className="breadcrumb-current">Investigations</span>

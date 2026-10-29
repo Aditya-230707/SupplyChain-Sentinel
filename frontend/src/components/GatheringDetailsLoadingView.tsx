@@ -94,30 +94,37 @@ export function GatheringDetailsLoadingView({
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-              <span className="badge badge-urgent" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span
-                  style={{
-                    width: '7px',
-                    height: '7px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--status-urgent)',
-                    animation: 'pulseGlow 1.4s infinite ease-in-out',
-                  }}
-                />
-                Gathering Disruption Details
-              </span>
-              <span className="badge badge-neutral" style={{ textTransform: 'capitalize' }}>
-                Mode: {searchMode === 'ddg' ? 'DuckDuckGo Live' : searchMode === 'live' ? 'Tavily News' : 'Simulated Fixture'}
-              </span>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}>
+            <img
+              src="/logo.png"
+              alt="Sentinel Logo"
+              style={{ width: '56px', height: '56px', objectFit: 'contain', flexShrink: 0, marginTop: '4px' }}
+            />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                <span className="badge badge-urgent" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span
+                    style={{
+                      width: '7px',
+                      height: '7px',
+                      borderRadius: '50%',
+                      backgroundColor: 'var(--status-urgent)',
+                      animation: 'pulseGlow 1.4s infinite ease-in-out',
+                    }}
+                  />
+                  Gathering Disruption Details
+                </span>
+                <span className="badge badge-neutral" style={{ textTransform: 'capitalize' }}>
+                  Mode: {searchMode === 'ddg' ? 'DuckDuckGo Live' : searchMode === 'live' ? 'Tavily News' : 'Simulated Fixture'}
+                </span>
+              </div>
+              <h1 style={{ fontSize: '1.45rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                Investigating {supplierName || 'Target Supplier'}
+              </h1>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '0.25rem' }}>
+                Synthesizing public evidence, verifying verbatim quotations, and computing inventory gap exposure.
+              </p>
             </div>
-            <h1 style={{ fontSize: '1.45rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              Investigating {supplierName || 'Target Supplier'}
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '0.25rem' }}>
-              Synthesizing public evidence, verifying verbatim quotations, and computing inventory gap exposure.
-            </p>
           </div>
 
           <div style={{ textAlign: 'right' }}>

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" width="140" alt="SupplyChain Sentinel Logo" />
+</p>
+
 # SupplyChain Sentinel — Comprehensive User Manual & Operations Guide
 
 > **System Version:** 0.1.0-release  

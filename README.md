@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.png" width="160" alt="SupplyChain Sentinel Logo" />
+</p>
+
 # SupplyChain Sentinel — Autonomous Risk Intelligence
 
 > **Evidence-First Supplier Incident Intelligence**  

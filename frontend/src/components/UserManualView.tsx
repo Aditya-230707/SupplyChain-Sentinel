@@ -13,17 +13,24 @@ export function UserManualView({ onStartInvestigation, onViewSuppliers }: UserMa
       {/* Header */}
       <div className="panel" style={{ marginBottom: '1.25rem', borderLeft: '4px solid var(--accent)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
-              <span className="badge badge-verified" style={{ fontSize: '0.75rem' }}>Operator Manual</span>
-              <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>Nebius × NVIDIA Nemotron</span>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.25rem' }}>
+            <img
+              src="/logo.png"
+              alt="Sentinel Logo"
+              style={{ width: '56px', height: '56px', objectFit: 'contain', flexShrink: 0, marginTop: '4px' }}
+            />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+                <span className="badge badge-verified" style={{ fontSize: '0.75rem' }}>Operator Manual</span>
+                <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>Nebius × NVIDIA Nemotron</span>
+              </div>
+              <h1 style={{ fontSize: '1.45rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                SupplyChain Sentinel — Operator Guide & Screen Manual
+              </h1>
+              <p style={{ color: 'var(--text-secondary)', marginTop: '0.35rem', maxWidth: '720px', fontSize: '0.88rem' }}>
+                Exact walkthrough matching every form field, toggle button, and dropdown in the application.
+              </p>
             </div>
-            <h1 style={{ fontSize: '1.45rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              SupplyChain Sentinel — Operator Guide & Screen Manual
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '0.35rem', maxWidth: '720px', fontSize: '0.88rem' }}>
-              Exact walkthrough matching every form field, toggle button, and dropdown in the application.
-            </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button className="btn btn-primary" onClick={onStartInvestigation} type="button">

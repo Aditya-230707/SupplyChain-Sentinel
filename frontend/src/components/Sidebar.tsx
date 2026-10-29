@@ -33,7 +33,12 @@ export function Sidebar({
       {/* Brand Header */}
       <div className="sidebar-header">
         <div className="sidebar-brand">
-          <div className="sidebar-brand-icon">S</div>
+          <img
+            src="/logo.png"
+            alt="Sentinel Logo"
+            className="sidebar-brand-img"
+            style={{ width: '28px', height: '28px', objectFit: 'contain' }}
+          />
           <span>SupplyChain Sentinel</span>
         </div>
       </div>
