@@ -32,6 +32,7 @@ import { SuppliersView } from './components/SuppliersView'
 import { AuditView } from './components/AuditView'
 import { DiagnosticsModal } from './components/DiagnosticsModal'
 import { UserManualView } from './components/UserManualView'
+import { GatheringDetailsLoadingView } from './components/GatheringDetailsLoadingView'
 
 export default function App() {
   const queryClient = useQueryClient()
@@ -51,6 +52,13 @@ export default function App() {
   const [reviewerNote, setReviewerNote] = useState<string>('')
   const [decisionFeedback, setDecisionFeedback] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
   const [investigationError, setInvestigationError] = useState<string | null>(null)
+  const [activeInvestigationMeta, setActiveInvestigationMeta] = useState<{
+    supplierName: string
+    country?: string | null
+    partName?: string | null
+    coverageDays?: string | null
+    searchMode?: string
+  } | null>(null)
 
   // Query: System health
   const { data: health } = useQuery({
@@ -161,9 +169,11 @@ export default function App() {
       setActiveIncidentId(null)
       queryClient.invalidateQueries({ queryKey: ['investigation', res.id] })
       queryClient.invalidateQueries({ queryKey: ['investigations-list'] })
+      setActiveInvestigationMeta(null)
       setActiveTab('workspace')
     },
     onError: (err: any) => {
+      setActiveInvestigationMeta(null)
       setInvestigationError(err.message || 'Failed to start investigation')
     },
   })
@@ -251,6 +261,19 @@ export default function App() {
         if (sup) setSelectedSupplier(sup as any)
       }
 
+      const displayName =
+        params.supplierMode === 'new'
+          ? params.name?.trim() || 'Supplier'
+          : suppliersData?.items.find((s) => s.id === targetSupplierId)?.name || 'Supplier'
+
+      setActiveInvestigationMeta({
+        supplierName: displayName,
+        country: params.country || (params.supplierMode === 'existing' ? suppliersData?.items.find((s) => s.id === targetSupplierId)?.country_or_region : null),
+        partName: params.partName,
+        coverageDays: params.coverage,
+        searchMode: params.mode,
+      })
+
       launchMutation.mutate({
         supplierId: targetSupplierId,
         mode: params.mode,
@@ -313,75 +336,103 @@ export default function App() {
         )}
 
         <main className="content-viewport">
-          {activeTab === 'investigations' && (
-            <InvestigationsView
-              investigations={investigationsList}
-              suppliers={suppliersData?.items || []}
-              isLoading={isListLoading}
-              onSelectRun={navigateToRun}
-              onNewInvestigation={() => setActiveTab('new_investigation')}
+          {launchMutation.isPending ? (
+            <GatheringDetailsLoadingView
+              supplierName={activeInvestigationMeta?.supplierName || selectedSupplier?.name || 'Target Supplier'}
+              country={activeInvestigationMeta?.country || selectedSupplier?.country_or_region}
+              partName={activeInvestigationMeta?.partName}
+              coverageDays={activeInvestigationMeta?.coverageDays}
+              searchMode={activeInvestigationMeta?.searchMode || searchMode}
+              modelId={providersHealth?.llm?.model_id}
             />
-          )}
+          ) : (
+            <>
+              {activeTab === 'investigations' && (
+                <InvestigationsView
+                  investigations={investigationsList}
+                  suppliers={suppliersData?.items || []}
+                  isLoading={isListLoading}
+                  onSelectRun={navigateToRun}
+                  onNewInvestigation={() => setActiveTab('new_investigation')}
+                />
+              )}
 
-          {activeTab === 'new_investigation' && (
-            <NewInvestigationView
-              searchMode={searchMode}
-              setSearchMode={setSearchMode}
-              suppliers={suppliersData?.items || []}
-              isTavilyAvailable={isTavilyAvailable}
-              onSubmit={handleStartCustomInvestigation}
-              onCancel={() => setActiveTab('investigations')}
-              isPending={launchMutation.isPending}
-            />
-          )}
+              {activeTab === 'new_investigation' && (
+                <NewInvestigationView
+                  searchMode={searchMode}
+                  setSearchMode={setSearchMode}
+                  suppliers={suppliersData?.items || []}
+                  isTavilyAvailable={isTavilyAvailable}
+                  onSubmit={handleStartCustomInvestigation}
+                  onCancel={() => setActiveTab('investigations')}
+                  isPending={launchMutation.isPending}
+                />
+              )}
 
-          {activeTab === 'workspace' && (
-            <WorkspaceView
-              run={run}
-              supplier={selectedSupplier}
-              activeIncident={activeIncident}
-              claims={claims}
-              sources={sources}
-              relations={relations}
-              reviews={reviews}
-              isRunLoading={isRunLoading}
-              decisionAction={decisionAction}
-              setDecisionAction={setDecisionAction}
-              overrideRec={overrideRec}
-              setOverrideRec={setOverrideRec}
-              reviewerName={reviewerName}
-              setReviewerName={setReviewerName}
-              reviewerNote={reviewerNote}
-              setReviewerNote={setReviewerNote}
-              decisionFeedback={decisionFeedback}
-              onSubmitDecision={() => reviewMutation.mutate()}
-              isReviewPending={reviewMutation.isPending}
-              onNewInvestigation={() => setActiveTab('new_investigation')}
-              activeModelId={providersHealth?.llm?.model_id}
-            />
-          )}
+              {activeTab === 'workspace' && (
+                run && ['queued', 'pending', 'searching', 'extracting', 'resolving', 'adjudicating', 'assessing_impact'].includes(run.status) ? (
+                  <GatheringDetailsLoadingView
+                    supplierName={selectedSupplier?.name || 'Target Supplier'}
+                    country={selectedSupplier?.country_or_region}
+                    searchMode={(run.metrics_json as any)?.search_mode || searchMode}
+                    currentStatus={run.status}
+                    modelId={providersHealth?.llm?.model_id}
+                  />
+                ) : (
+                  <WorkspaceView
+                    run={run}
+                    supplier={selectedSupplier}
+                    activeIncident={activeIncident}
+                    claims={claims}
+                    sources={sources}
+                    relations={relations}
+                    reviews={reviews}
+                    isRunLoading={isRunLoading}
+                    decisionAction={decisionAction}
+                    setDecisionAction={setDecisionAction}
+                    overrideRec={overrideRec}
+                    setOverrideRec={setOverrideRec}
+                    reviewerName={reviewerName}
+                    setReviewerName={setReviewerName}
+                    reviewerNote={reviewerNote}
+                    setReviewerNote={setReviewerNote}
+                    decisionFeedback={decisionFeedback}
+                    onSubmitDecision={() => reviewMutation.mutate()}
+                    isReviewPending={reviewMutation.isPending}
+                    onNewInvestigation={() => setActiveTab('new_investigation')}
+                    activeModelId={providersHealth?.llm?.model_id}
+                  />
+                )
+              )}
 
-          {activeTab === 'suppliers' && (
-            <SuppliersView
-              suppliers={suppliersData?.items || []}
-              total={suppliersData?.total || 0}
-              onInvestigate={(sup) => {
-                setSelectedSupplier(sup as any)
-                launchMutation.mutate({ supplierId: sup.id, mode: searchMode })
-              }}
-              onAddSupplier={() => setActiveTab('new_investigation')}
-            />
-          )}
+              {activeTab === 'suppliers' && (
+                <SuppliersView
+                  suppliers={suppliersData?.items || []}
+                  total={suppliersData?.total || 0}
+                  onInvestigate={(sup) => {
+                    setSelectedSupplier(sup as any)
+                    setActiveInvestigationMeta({
+                      supplierName: sup.name,
+                      country: sup.country_or_region,
+                      searchMode: searchMode,
+                    })
+                    launchMutation.mutate({ supplierId: sup.id, mode: searchMode })
+                  }}
+                  onAddSupplier={() => setActiveTab('new_investigation')}
+                />
+              )}
 
-          {activeTab === 'audit' && (
-            <AuditView auditEvents={auditEvents} />
-          )}
+              {activeTab === 'audit' && (
+                <AuditView auditEvents={auditEvents} />
+              )}
 
-          {activeTab === 'manual' && (
-            <UserManualView
-              onStartInvestigation={() => setActiveTab('new_investigation')}
-              onViewSuppliers={() => setActiveTab('suppliers')}
-            />
+              {activeTab === 'manual' && (
+                <UserManualView
+                  onStartInvestigation={() => setActiveTab('new_investigation')}
+                  onViewSuppliers={() => setActiveTab('suppliers')}
+                />
+              )}
+            </>
           )}
         </main>
       </div>

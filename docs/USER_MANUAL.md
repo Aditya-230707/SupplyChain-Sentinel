@@ -151,18 +151,19 @@ Click the **`+ New Investigation`** button in the sidebar or top bar to open the
 * **Launch:**  
   Click the green **`[Start Investigation →]`** button at the bottom right.
 
-### Step 3: The Multi-Stage Verification Pipeline
-Once launched, the pipeline executes in real time:
-1. **Search & Fetching:** Retrieves public news, regulatory reports, and trade articles.
-2. **Lineage Clustering:** Groups wire duplicates (Reuters/Yahoo/MSN) so they cannot artificially inflate incident confidence.
-3. **Nemotron Cloud Extraction:** The NVIDIA model identifies candidate incidents, affected facilities, incident categories, and quoted claims.
-4. **Deterministic Gate Checks:**
-   - Evaluates Rule E-005: Every single claim quote is checked against source text.
-   - Evaluates Rule ID-001: Validates company name, domain, and geographic location.
-   - Computes operational inventory gap ($Gap = Recovery - Buffer$).
+### Step 3: Gathering Details Loading Screen
+Immediately upon clicking **`[Start Investigation →]`**, the interface transitions to the **Gathering Details Loading Screen**:
+* **Live Forensic Stepper:** Shows real-time progress across 5 distinct pipeline stages:
+  1. *Intelligence Ingestion:* Queries public sources & news wires with SSRF safety checks.
+  2. *Syndicated Wire Deduplication:* Clusters syndication copies (Reuters, AP, Bloomberg) into singular reporting groups.
+  3. *Nebius Cloud Neural Reasoning:* Runs `nvidia/Nemotron-3_5-Lightning` with full reasoning tokens to structure claims without hallucinations.
+  4. *Deterministic Verification:* Enforces Rule E-005 exact substring character matching and Rule ID-001 entity disambiguation.
+  5. *Operational Exposure Calculation:* Balances reported downtime against your warehouse safety stock buffer (Formula EX-003).
+* **Live Stopwatch:** Tracks elapsed inference seconds ($T+00:08\text{s}$).
+* **Target Profile Badge:** Displays supplier name, part number, safety stock days, and inference model ID.
 
 ### Step 4: Forensic Workspace & Evidence Inspection
-Click on any investigation from the list to enter the **Forensic Workspace**:
+Once the pipeline finishes, the screen seamlessly transitions into the **Forensic Workspace**:
 - **Operational Exposure Card:** Visualizes your safety stock vs estimated disruption days.
   - *Example:* If estimated recovery is 45 days and buffer is 14 days, Sentinel calculates a **31-Day Net Disruption Exposure**.
 - **Incident Candidate Summary:** Shows the incident type (e.g., *Operational Disruption - Cleanroom Fire*), severity level, and facility location.

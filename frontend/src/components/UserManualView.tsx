@@ -145,13 +145,13 @@ export function UserManualView({ onStartInvestigation, onViewSuppliers }: UserMa
               What Happens After Clicking "Start Investigation →"?
             </h2>
             <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '0.75rem' }}>
-              Sentinel immediately transitions to the <strong>Forensic Workspace</strong> tab:
+              Sentinel immediately displays the dedicated <strong>Gathering Details Loading Screen</strong> followed by the <strong>Forensic Workspace</strong>:
             </p>
             <ol style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', paddingLeft: '1.25rem', lineHeight: 1.6 }}>
-              <li><strong>Live Pipeline Execution:</strong> The status advances from <code>queued</code> → <code>searching</code> → <code>extracting</code> → <code>adjudicating</code> → <code>completed</code>.</li>
-              <li><strong>Evidence Cards:</strong> Green <code>exact_match</code> pills show the model's extracted claims with exact character offsets inside the source text.</li>
-              <li><strong>Syndicated Lineage:</strong> Groups news wire duplicates (Reuters/Yahoo/MSN) so confidence is not artificially inflated.</li>
-              <li><strong>Human Decision Gate (Bottom):</strong> Review the recommendation (e.g. <em>Invoke Dual Sourcing</em> or <em>Monitor Only</em>), select <em>Approve</em>, <em>Override</em>, or <em>Dismiss</em>, enter your reviewer name, and click <strong>Commit Review Decision</strong> to write to the permanent Audit Trail.</li>
+              <li><strong>Gathering Details Loading Screen:</strong> Shows live elapsed seconds and an animated 5-stage pipeline tracker: <em>Source Ingestion → Wire Deduplication → Nebius Cloud Neural Reasoning (NVIDIA Nemotron) → Verbatim Quote Grounding → Operational Exposure Math</em>.</li>
+              <li><strong>Forensic Evidence Cards:</strong> Once completed, green <code>validated</code> pills display each extracted claim with verified character offsets inside the original source documents.</li>
+              <li><strong>Syndicated Lineage:</strong> Groups news wire duplicates (Reuters/Yahoo/MSN) into a single reporting cluster to prevent artificial confidence inflation.</li>
+              <li><strong>Human Decision Gate:</strong> Review the deterministic policy recommendation (e.g. <em>Invoke Dual Sourcing</em> or <em>Monitor Only</em>), select <em>Approve</em>, <em>Override</em>, or <em>Dismiss</em>, enter your reviewer credentials, and click <strong>Commit Review Decision</strong> to write to the permanent Audit Trail.</li>
             </ol>
           </div>
         </div>
