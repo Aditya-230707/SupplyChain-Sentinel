@@ -6,7 +6,7 @@ interface UserManualViewProps {
 }
 
 export function UserManualView({ onStartInvestigation, onViewSuppliers }: UserManualViewProps) {
-  const [activeSection, setActiveSection] = useState<'quickstart' | 'concepts' | 'screens' | 'scenarios' | 'faq'>('quickstart')
+  const [activeSection, setActiveSection] = useState<'screen_guide' | 'concepts' | 'scenarios' | 'faq'>('screen_guide')
 
   return (
     <div className="main-content">
@@ -15,22 +15,22 @@ export function UserManualView({ onStartInvestigation, onViewSuppliers }: UserMa
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
-              <span className="badge badge-verified" style={{ fontSize: '0.75rem' }}>Operator Guide</span>
+              <span className="badge badge-verified" style={{ fontSize: '0.75rem' }}>Operator Manual</span>
               <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>Nebius × NVIDIA Nemotron</span>
             </div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              SupplyChain Sentinel — User Manual & Operations Guide
+            <h1 style={{ fontSize: '1.45rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+              SupplyChain Sentinel — Operator Guide & Screen Manual
             </h1>
-            <p style={{ color: 'var(--text-secondary)', marginTop: '0.35rem', maxWidth: '720px', fontSize: '0.9rem' }}>
-              Complete reference manual for monitoring supplier disruption signals, conducting evidence-first investigations, evaluating operational inventory exposure, and recording auditable procurement decisions.
+            <p style={{ color: 'var(--text-secondary)', marginTop: '0.35rem', maxWidth: '720px', fontSize: '0.88rem' }}>
+              Exact walkthrough matching every form field, toggle button, and dropdown in the application.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button className="btn btn-primary" onClick={onStartInvestigation} type="button">
-              + Launch Investigation
+              Go To Investigation Screen →
             </button>
             <button className="btn btn-outline" onClick={onViewSuppliers} type="button">
-              Manage Suppliers
+              View Suppliers (26)
             </button>
           </div>
         </div>
@@ -38,11 +38,10 @@ export function UserManualView({ onStartInvestigation, onViewSuppliers }: UserMa
         {/* Tab Selector */}
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '0.85rem' }}>
           {[
-            { id: 'quickstart', label: '1. Quick Start (4-Step Flow)' },
-            { id: 'concepts', label: '2. Core Principles & Safeguards' },
-            { id: 'screens', label: '3. Interface Walkthrough' },
-            { id: 'scenarios', label: '4. Benchmark Scenarios' },
-            { id: 'faq', label: '5. Troubleshooting & FAQ' },
+            { id: 'screen_guide', label: '1. Screen-by-Screen Form Guide' },
+            { id: 'scenarios', label: '2. The 3 Sample Scenarios' },
+            { id: 'concepts', label: '3. Verification Rules (Rulebook)' },
+            { id: 'faq', label: '4. Diagnostics & FAQ' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -57,239 +56,149 @@ export function UserManualView({ onStartInvestigation, onViewSuppliers }: UserMa
         </div>
       </div>
 
-      {/* Section 1: Quick Start */}
-      {activeSection === 'quickstart' && (
+      {/* Section 1: Exact Screen Guide matching user screenshot */}
+      {activeSection === 'screen_guide' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div className="panel">
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.85rem' }}>
-              How to Run an Incident Investigation in 4 Steps
-            </h2>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
-              <div style={{ padding: '1rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent)', color: '#fff', fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.6rem' }}>
-                  1
-                </div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.35rem' }}>
-                  Select or Enter Supplier
-                </h3>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Click <strong>New Investigation</strong>. Pick an existing tracked vendor (e.g. <em>Silicon Foundry Dresden</em>) or type a new vendor name, country, and official web domain.
-                </p>
-              </div>
-
-              <div style={{ padding: '1rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent)', color: '#fff', fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.6rem' }}>
-                  2
-                </div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.35rem' }}>
-                  Input Inventory Buffer
-                </h3>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Enter your internal <strong>Days of Inventory Coverage</strong> (e.g. 14 days). Sentinel mathematically balances this against reported downtime to calculate true disruption exposure.
-                </p>
-              </div>
-
-              <div style={{ padding: '1rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent)', color: '#fff', fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.6rem' }}>
-                  3
-                </div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.35rem' }}>
-                  Launch Pipeline
-                </h3>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Select search engine (<strong>DuckDuckGo Live</strong> or <strong>Tavily</strong>) and click <strong>Run Investigation</strong>. Sentinel executes multi-stage verification in real-time.
-                </p>
-              </div>
-
-              <div style={{ padding: '1rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent)', color: '#fff', fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.6rem' }}>
-                  4
-                </div>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.35rem' }}>
-                  Inspect & Record Decision
-                </h3>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Review exact substring quote matches, syndicated wire clusters, and policy advice. Sign off on the Decision Gate to commit the decision to the immutable audit trail.
-                </p>
-              </div>
+          {/* Top Bar Quick Pre-Fill */}
+          <div className="panel" style={{ borderLeft: '4px solid var(--status-caution-border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+              <span className="badge badge-caution">Top Right Feature</span>
+              <strong style={{ fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                Sample Scenario Dropdown
+              </strong>
             </div>
-          </div>
-
-          <div className="panel" style={{ background: 'var(--bg-surface-elevated)' }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
-              Pro Tip: 1-Click Evaluation Scenarios
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.85rem' }}>
-              Want to see how Sentinel handles edge cases immediately? In the <strong>New Investigation</strong> screen, click any of the scenario cards at the top:
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              At the very top right of the <em>New Supplier Investigation</em> screen, look for <strong>Sample Scenario: [ Select scenario to pre-fill… ]</strong>. Selecting one automatically populates the entire form and selects <strong>Deterministic Fixtures</strong> so you can test the pipeline instantly without typing anything!
             </p>
-            <ul style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', paddingLeft: '1.25rem', lineHeight: 1.6 }}>
-              <li><strong>Cleanroom Fire (Dresden):</strong> Shows genuine factory downtime (45 days) outpacing safety stock (14 days), triggering an <em>Invoke Dual Sourcing</em> recommendation.</li>
-              <li><strong>Substation Incident (Titan Energy):</strong> Disruption occurred at an off-site power substation without damaging production lines, demonstrating how Sentinel rules out false alarms.</li>
-              <li><strong>Cybersecurity Alert (Vertex):</strong> Disruption occurred at an unrelated entity in Australia with an identical name, demonstrating multi-signal entity disambiguation.</li>
-            </ul>
           </div>
-        </div>
-      )}
 
-      {/* Section 2: Core Concepts */}
-      {activeSection === 'concepts' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {/* Form Breakdown */}
           <div className="panel">
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.85rem' }}>
-              Why Sentinel is Different from Raw LLM Summarizers
-            </h2>
-            <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-              Generic AI models panic on negative keywords, treat syndicated news copies as independent verification, and hallucinate quotes. Sentinel enforces mathematical, deterministic safeguards on top of <strong>NVIDIA Nemotron-3.5-Lightning</strong>:
-            </p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-              <div style={{ padding: '0.9rem', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)' }}>
-                <div style={{ fontWeight: 600, color: 'var(--status-verified)', marginBottom: '0.25rem' }}>
-                  Rule E-005: Exact Substring Quote Grounding
-                </div>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Every extracted fact or downtime claim must contain an exact, character-level substring match against the fetched article body. If a model fabricates or paraphrases text, the claim is flagged as <code>quote_mismatch</code> and discarded.
-                </p>
-              </div>
-
-              <div style={{ padding: '0.9rem', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)' }}>
-                <div style={{ fontWeight: 600, color: 'var(--status-verified)', marginBottom: '0.25rem' }}>
-                  Rules E-001–E-003: Syndicated Wire Deduplication
-                </div>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  When Reuters distributes a story reprinted by Yahoo, MSN, and Investing.com, naive algorithms count this as "4 independent sources." Sentinel parses canonical URLs, wire bylines, and text hashes into a single reporting group.
-                </p>
-              </div>
-
-              <div style={{ padding: '0.9rem', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)' }}>
-                <div style={{ fontWeight: 600, color: 'var(--status-verified)', marginBottom: '0.25rem' }}>
-                  Rules ID-001–ID-005: Multi-Signal Entity Resolution
-                </div>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  To attribute an incident to a supplier, Sentinel requires corroborating corporate domain, plant location, or country signals. Homonym companies in different industries or geographies are safely marked as mismatches.
-                </p>
-              </div>
-
-              <div style={{ padding: '0.9rem', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)' }}>
-                <div style={{ fontWeight: 600, color: 'var(--status-verified)', marginBottom: '0.25rem' }}>
-                  Bounded Range Exposure Arithmetic
-                </div>
-                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Disruptions are represented as bounded intervals [min, max] rather than false point estimates. If duration is unknown, the operational gap is strictly preserved as null rather than defaulted to zero.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Section 3: Interface Walkthrough */}
-      {activeSection === 'screens' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div className="panel">
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.85rem' }}>
-              Tour of System Screens
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>
+              Form Field Reference (Matching Your Screen Exactly)
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.35rem' }}>
-                  A. Investigations List
-                </h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  The central monitoring inbox. Lists all past and running investigations with real-time status indicators (<code>queued</code>, <code>searching</code>, <code>extracting</code>, <code>completed</code>), severity badges (<em>Urgent Review</em>, <em>Action Recommended</em>, <em>Monitor Only</em>), and one-click access to the active workspace.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Section 1 */}
+              <div style={{ padding: '0.9rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.9rem' }}>1. Search & Discovery Engine</span>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+                  Choose where Sentinel gathers incident intelligence:
                 </p>
-              </div>
-
-              <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.35rem' }}>
-                  B. Active Investigation Workspace (3-Pane Investigation View)
-                </h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '0.5rem' }}>
-                  The core forensic workstation divided into high-density analysis zones:
-                </p>
-                <ul style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', paddingLeft: '1.25rem', lineHeight: 1.6 }}>
-                  <li><strong>Incident Summary & Severity:</strong> Shows the resolved supplier, facility, incident category, and calculated operational gap (Days to Recover minus Inventory Buffer).</li>
-                  <li><strong>Evidence & Quote Inspection:</strong> Card-by-card breakdown of every extracted claim. Click any quote to inspect its exact character offset within the source article.</li>
-                  <li><strong>Lineage & Syndication Grouping:</strong> Visual inspection of primary publisher vs syndication copies.</li>
-                  <li><strong>Human Decision Gate:</strong> The procurement sign-off panel. Select your action, provide reviewer credentials and context, and submit to the audit log.</li>
+                <ul style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', paddingLeft: '1.25rem', lineHeight: 1.6 }}>
+                  <li><strong>DuckDuckGo Live (Checked by default):</strong> Scours the live public web for real-time news with built-in SSRF protection. Zero API keys needed.</li>
+                  <li><strong>Deterministic Fixtures:</strong> Runs reproducible offline test cases (e.g. Dresden wafer fire, Titan substation). Best for verifying model logic immediately.</li>
+                  <li><strong>Tavily Search:</strong> Premium structured news engine (requires <code>TAVILY_API_KEY</code>).</li>
                 </ul>
               </div>
 
-              <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.35rem' }}>
-                  C. Suppliers Directory
-                </h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Manage the bill of materials and supplier master data. View active parts, manufacturing facilities, safety stock buffers (coverage days), and historical incident frequency per vendor.
+              {/* Section 2 */}
+              <div style={{ padding: '0.9rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.9rem' }}>2. Target Supplier</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Top buttons: [Enter Details] | [Select Existing (26)]</span>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+                  You can either enter a new supplier or pick one of the 26 pre-loaded suppliers:
                 </p>
+                <ul style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', paddingLeft: '1.25rem', lineHeight: 1.6 }}>
+                  <li><strong>Click [Select Existing (26)]:</strong> Opens a dropdown where you can choose a vendor from your database (e.g., <em>Silicon Foundry Dresden GmbH</em>).</li>
+                  <li><strong>Click [Enter Details]:</strong> Manually enter <em>Supplier Legal Name *</em> (required), <em>Country / Jurisdiction</em>, <em>Official Domain</em> (used for Rule ID-001 website matching), and <em>Criticality Tier</em> (Tier 1 High, Tier 2 Medium, Tier 3 Low).</li>
+                </ul>
               </div>
 
-              <div style={{ borderBottom: '1px solid var(--border-subtle)', paddingBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.35rem' }}>
-                  D. Immutable Audit Trail
-                </h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Comprehensive forensic ledger. Every pipeline search query, model extraction, policy rule evaluation, and human decision gate sign-off is logged with UTC timestamps and correlation IDs.
+              {/* Section 3 */}
+              <div style={{ padding: '0.9rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.9rem' }}>3. Operational Exposure Context (Optional)</span>
+                  <span className="badge badge-neutral">Formula EX-003</span>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '0.5rem' }}>
+                  Mathematical inventory formula: <code>Gap = max(0, Disruption Duration − Safety Stock)</code>.
                 </p>
+                <ul style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', paddingLeft: '1.25rem', lineHeight: 1.6 }}>
+                  <li><strong>Critical Component / Part Name:</strong> e.g., <code>Automotive Microcontroller MCU-4</code>. Identifies which part is at risk.</li>
+                  <li><strong>Safety Stock Coverage (Days):</strong> e.g., <code>14</code>. How many days your plant can continue operating using warehouse reserves.</li>
+                  <li><strong>Estimated Disruption (Days):</strong> e.g., <code>45</code>. The expected vendor downtime reported in news or estimated by the model.</li>
+                  <li><em>Result:</em> If Disruption (45) &gt; Safety Stock (14), Sentinel calculates a <strong>31-Day Operational Gap</strong>.</li>
+                </ul>
               </div>
 
-              <div>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.35rem' }}>
-                  E. System Diagnostics Modal
-                </h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  Accessible from the bottom of the left sidebar. Verifies live connection to <strong>Nebius Token Factory</strong>, checks NVIDIA Nemotron model latency, validates search provider API quotas, and reports database connectivity.
+              {/* Section 4 & Submit */}
+              <div style={{ padding: '0.9rem', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)' }}>
+                <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.9rem' }}>4. Incident Categories to Monitor & Launch</span>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.35rem 0 0.5rem 0', lineHeight: 1.5 }}>
+                  Select incident categories: <em>Operational Disruption</em> (fires/outages), <em>Environmental & Regulatory</em> (sanctions/EPA), or <em>Logistics Disruption</em> (ports/freight).
+                </p>
+                <p style={{ fontSize: '0.84rem', color: 'var(--text-primary)', fontWeight: 600 }}>
+                  Finally, click the green button at the bottom right: <code>[Start Investigation →]</code>.
                 </p>
               </div>
             </div>
           </div>
+
+          {/* What happens next */}
+          <div className="panel">
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+              What Happens After Clicking "Start Investigation →"?
+            </h2>
+            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '0.75rem' }}>
+              Sentinel immediately transitions to the <strong>Forensic Workspace</strong> tab:
+            </p>
+            <ol style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', paddingLeft: '1.25rem', lineHeight: 1.6 }}>
+              <li><strong>Live Pipeline Execution:</strong> The status advances from <code>queued</code> → <code>searching</code> → <code>extracting</code> → <code>adjudicating</code> → <code>completed</code>.</li>
+              <li><strong>Evidence Cards:</strong> Green <code>exact_match</code> pills show the model's extracted claims with exact character offsets inside the source text.</li>
+              <li><strong>Syndicated Lineage:</strong> Groups news wire duplicates (Reuters/Yahoo/MSN) so confidence is not artificially inflated.</li>
+              <li><strong>Human Decision Gate (Bottom):</strong> Review the recommendation (e.g. <em>Invoke Dual Sourcing</em> or <em>Monitor Only</em>), select <em>Approve</em>, <em>Override</em>, or <em>Dismiss</em>, enter your reviewer name, and click <strong>Commit Review Decision</strong> to write to the permanent Audit Trail.</li>
+            </ol>
+          </div>
         </div>
       )}
 
-      {/* Section 4: Benchmark Scenarios */}
+      {/* Section 2: Sample Scenarios */}
       {activeSection === 'scenarios' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div className="panel">
             <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.85rem' }}>
-              Standard Benchmark Challenge Scenarios
+              How to Test the 3 Built-in Benchmark Scenarios
             </h2>
-            <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1rem' }}>
-              These scenarios demonstrate how the rule engine prevents the most dangerous enterprise failure modes:
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '1rem' }}>
+              Select these directly from the <strong>Sample Scenario</strong> dropdown on the New Investigation screen:
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
               <div style={{ padding: '1rem', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)' }}>
                 <span className="badge badge-urgent" style={{ marginBottom: '0.5rem', display: 'inline-block' }}>Urgent Review</span>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>1. Dresden Cleanroom Fire</h3>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>1. Cleanroom Fire (Dresden)</h3>
                 <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.4rem 0', lineHeight: 1.5 }}>
-                  <strong>Scenario:</strong> 300mm wafer cleanroom fire halting fabrication for 45 days. Inventory buffer is 14 days.
+                  Select <code>Cleanroom Fire (Direct Disruption) (Silicon Foundry Dresden GmbH)</code>. Pre-fills 14 days safety stock and 45 days disruption.
                 </p>
                 <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  <strong>Expected Outcome:</strong> 31-day operational exposure gap. Triggers Rule P-007 (Invoke Dual Sourcing).
+                  <strong>Result:</strong> 31-day net operational gap triggers Rule P-007 (Invoke Dual Sourcing).
                 </p>
               </div>
 
               <div style={{ padding: '1rem', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)' }}>
                 <span className="badge badge-caution" style={{ marginBottom: '0.5rem', display: 'inline-block' }}>Monitor Only</span>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>2. Titan Substation Explosion</h3>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>2. Substation Incident (Titan)</h3>
                 <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.4rem 0', lineHeight: 1.5 }}>
-                  <strong>Scenario:</strong> Media reports power substation explosion near battery manufacturer plant. Plant backup generators kept lines running.
+                  Select <code>Substation Incident (Non-Impacting) (Titan Energy Solutions)</code>. Pre-fills 30 days safety stock and 10 days recovery.
                 </p>
                 <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  <strong>Expected Outcome:</strong> Net gap is 0 days. Triggers Rule P-009 (Monitor Only) preventing false panic.
+                  <strong>Result:</strong> Transformer explosion was off-site; manufacturing lines unaffected. Net gap is 0 days. Triggers Rule P-009 (Monitor Only), suppressing false panic.
                 </p>
               </div>
 
               <div style={{ padding: '1rem', border: '1px solid var(--border-base)', borderRadius: 'var(--radius-md)', background: 'var(--bg-surface)' }}>
                 <span className="badge badge-neutral" style={{ marginBottom: '0.5rem', display: 'inline-block' }}>Entity Mismatch</span>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>3. Vertex Homonym Alert</h3>
+                <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>3. Cybersecurity Alert (Vertex)</h3>
                 <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.4rem 0', lineHeight: 1.5 }}>
-                  <strong>Scenario:</strong> News alert regarding a ransomware attack at "Vertex Ltd" in Australia. Tracked supplier is UK fastener maker.
+                  Select <code>Cybersecurity Alert (Entity Mismatch) (Vertex Components Ltd)</code>.
                 </p>
                 <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  <strong>Expected Outcome:</strong> Geographic mismatch detected. Escalation blocked, protecting buyer relationships.
+                  <strong>Result:</strong> News is about a company in Australia, whereas your vendor is in the UK. Rule ID-001 catches the geographic mismatch and blocks wrongful escalation.
                 </p>
               </div>
             </div>
@@ -297,48 +206,38 @@ export function UserManualView({ onStartInvestigation, onViewSuppliers }: UserMa
         </div>
       )}
 
-      {/* Section 5: FAQ */}
+      {/* Section 3: Concepts */}
+      {activeSection === 'concepts' && (
+        <div className="panel">
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.85rem' }}>
+            The Deterministic Rulebook Safeguards
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <div style={{ padding: '0.75rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)' }}>
+              <strong>Rule E-005 (Exact Substring Verification):</strong> No quote is trusted without an exact character match against the raw HTML/text payload.
+            </div>
+            <div style={{ padding: '0.75rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)' }}>
+              <strong>Rules E-001–E-003 (Syndicated Wire Deduplication):</strong> News stories citing the same original wire service (e.g. Reuters, AP) are grouped into 1 reporting cluster.
+            </div>
+            <div style={{ padding: '0.75rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)' }}>
+              <strong>Rules ID-001–ID-005 (Entity Disambiguation):</strong> Confirms legal name, official web domain, and facility city to prevent mistaking homonyms for your suppliers.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Section 4: FAQ */}
       {activeSection === 'faq' && (
         <div className="panel">
-          <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>
-            Frequently Asked Questions & Troubleshooting
+          <h2 style={{ fontSize: '1.15rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.85rem' }}>
+            Diagnostics & FAQ
           </h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ padding: '0.85rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                Q: Which AI model is running under the hood?
-              </div>
-              <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                Sentinel runs on <strong>NVIDIA Nemotron-3.5-Lightning</strong> hosted directly on <strong>Nebius Token Factory</strong> via high-throughput GPU clusters.
-              </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <div style={{ padding: '0.75rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)' }}>
+              <strong>Where can I see Nebius model latency?</strong> Click <em>System Diagnostics</em> at the bottom of the left sidebar to see real-time Nebius Token Factory roundtrip ping.
             </div>
-
-            <div style={{ padding: '0.85rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                Q: Can I use live public web search without paying for search keys?
-              </div>
-              <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                Yes! The default search engine is <strong>DuckDuckGo Live</strong>, which requires zero API keys and features enterprise SSRF safe guard protection. For news wire searches, Tavily is also supported when an optional key is supplied.
-              </p>
-            </div>
-
-            <div style={{ padding: '0.85rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                Q: How does the Decision Gate work?
-              </div>
-              <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                No automated policy action takes effect without human sign-off. A procurement manager or sourcing engineer must review the evidence, select an action (Approve, Override, Dismiss), provide their name and justification notes, and submit.
-              </p>
-            </div>
-
-            <div style={{ padding: '0.85rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '0.3rem' }}>
-                Q: Where is the OpenAPI documentation?
-              </div>
-              <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                Interactive Swagger UI is available at <a href="/api/docs" target="_blank" rel="noreferrer">/api/docs</a> and ReDoc is available at <a href="/api/redoc" target="_blank" rel="noreferrer">/api/redoc</a>.
-              </p>
+            <div style={{ padding: '0.75rem', background: 'var(--bg-surface-elevated)', borderRadius: 'var(--radius-md)' }}>
+              <strong>Do I need API keys to run live investigations?</strong> No! <em>DuckDuckGo Live</em> mode executes real internet searches with zero API keys required.
             </div>
           </div>
         </div>

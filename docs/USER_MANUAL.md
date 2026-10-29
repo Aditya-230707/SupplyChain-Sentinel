@@ -125,18 +125,31 @@ When you open [http://localhost:8000/](http://localhost:8000/), you land on the 
 3. The main panel displays all investigation runs with their status (`completed`, `extracting`, `queued`), severity rating, and timestamp.
 
 ### Step 2: Creating a New Investigation
-Click the **`+ New Investigation`** button in the sidebar or top bar:
-1. **Choose a Search Mode:**
-   - **DuckDuckGo Live (Default):** Zero-API-key live public web search with automatic SSRF filtering.
-   - **Tavily Curated Search:** Commercial structured news wire search.
-   - **Deterministic Fixtures:** Zero-network offline test queries.
-2. **Choose Supplier Mode:**
-   - **Existing Supplier:** Pick an existing tracked vendor from your database.
-   - **New Supplier:** Enter Supplier Name, Official Domain (e.g. `silicon-dresden.de`), and Country.
-3. **Set Criticality & Operational Buffer:**
-   - Enter **Part Name** (e.g. *Automotive Microcontroller MCU-4*).
-   - Enter **Inventory Coverage (Days)** (e.g. `14`). This represents how many days your factory can run on safety stock before halting production lines.
-4. **Click "Run Investigation"** to start the pipeline.
+Click the **`+ New Investigation`** button in the sidebar or top bar to open the **New Supplier Investigation** screen:
+
+* **Top Right — Sample Scenario Dropdown:**  
+  Use the dropdown **`Sample Scenario: [ Select scenario to pre-fill… ]`** to automatically load one of the 3 benchmark edge cases (*Cleanroom Fire*, *Substation Incident*, or *Cyber Alert*). It pre-fills all fields and selects *Deterministic Fixtures* so you can evaluate the pipeline with one click.
+
+* **1. Search & Discovery Engine:**
+  - **DuckDuckGo Live (Checked by default):** Zero-API-key live web search with automated SSRF protection.
+  - **Deterministic Fixtures:** Offline challenge scenarios for instant reproducible evaluation.
+  - **Tavily Search:** Commercial syndicated wire search (requires `TAVILY_API_KEY`).
+
+* **2. Target Supplier:**
+  - Click **`[Select Existing (26)]`** to choose a vendor already tracked in your database.
+  - Or click **`[Enter Details]`** to type custom parameters: *Supplier Legal Name \**, *Country / Jurisdiction*, *Official Domain* (for entity resolution), and *Criticality Tier* (Tier 1 High, Tier 2 Medium, Tier 3 Low).
+
+* **3. Operational Exposure Context (Optional) — Formula EX-003:**
+  Calculates exposure via: `Gap = max(0, Disruption Duration − Safety Stock)`.
+  - **Critical Component / Part Name:** (e.g. `Automotive Microcontroller MCU-4`).
+  - **Safety Stock Coverage (Days):** (e.g. `14`). The buffer stock available at your plants.
+  - **Estimated Disruption (Days):** (e.g. `45`). The reported or modeled downtime.
+
+* **4. Incident Categories to Monitor:**
+  Select from *Operational Disruption*, *Environmental & Regulatory*, and *Logistics Disruption*.
+
+* **Launch:**  
+  Click the green **`[Start Investigation →]`** button at the bottom right.
 
 ### Step 3: The Multi-Stage Verification Pipeline
 Once launched, the pipeline executes in real time:
