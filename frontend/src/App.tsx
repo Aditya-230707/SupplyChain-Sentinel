@@ -31,6 +31,7 @@ import { WorkspaceView } from './components/WorkspaceView'
 import { SuppliersView } from './components/SuppliersView'
 import { AuditView } from './components/AuditView'
 import { DiagnosticsModal } from './components/DiagnosticsModal'
+import { UserManualView } from './components/UserManualView'
 
 export default function App() {
   const queryClient = useQueryClient()
@@ -374,6 +375,13 @@ export default function App() {
 
           {activeTab === 'audit' && (
             <AuditView auditEvents={auditEvents} />
+          )}
+
+          {activeTab === 'manual' && (
+            <UserManualView
+              onStartInvestigation={() => setActiveTab('new_investigation')}
+              onViewSuppliers={() => setActiveTab('suppliers')}
+            />
           )}
         </main>
       </div>

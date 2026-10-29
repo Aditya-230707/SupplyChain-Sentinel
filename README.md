@@ -117,6 +117,7 @@ npm --prefix frontend run build
 ```
 
 - **Live Web Interface:** [http://localhost:8000/](http://localhost:8000/)
+- **Operator User Manual:** [`docs/USER_MANUAL.md`](docs/USER_MANUAL.md) *(and in-app under the User Manual tab)*
 - **Interactive OpenAPI Documentation:** [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
 - **Health Diagnostics:** [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
 

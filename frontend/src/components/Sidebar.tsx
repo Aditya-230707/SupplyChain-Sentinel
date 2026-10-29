@@ -102,6 +102,15 @@ export function Sidebar({
               <span>Audit Trail</span>
               <span className="nav-badge">{auditCount}</span>
             </button>
+
+            <button
+              className={`nav-item ${activeTab === 'manual' ? 'active' : ''}`}
+              onClick={() => setActiveTab('manual')}
+              type="button"
+            >
+              <span>User Manual</span>
+              <span className="nav-badge" style={{ backgroundColor: 'var(--status-verified-bg)', color: 'var(--status-verified)', borderColor: 'var(--status-verified-border)' }}>Guide</span>
+            </button>
           </nav>
         </div>
       </div>

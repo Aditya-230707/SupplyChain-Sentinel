@@ -67,3 +67,4 @@ export type ActiveTab =
   | 'workspace'
   | 'suppliers'
   | 'audit'
+  | 'manual'

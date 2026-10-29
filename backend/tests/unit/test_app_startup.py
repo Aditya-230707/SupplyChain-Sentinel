@@ -78,7 +78,13 @@ async def test_providers_health_fake_provider(client: AsyncClient) -> None:
 
 
 @pytest.mark.asyncio
-async def test_smoke_test_blocked_without_flag(client: AsyncClient) -> None:
+async def test_smoke_test_blocked_without_flag(
+    client: AsyncClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "allow_live_smoke_tests", False)
     resp = await client.post("/api/v1/health/providers/smoke-test")
     assert resp.status_code == 429  # rate_limited when ALLOW_LIVE_SMOKE_TESTS=false
 
